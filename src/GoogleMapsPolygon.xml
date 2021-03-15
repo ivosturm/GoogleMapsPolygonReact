@@ -13,7 +13,7 @@
 			<propertyGroup caption="Map">
 				<property key="apiAccessKey" type="string" required="false">
 					<caption>Maps API Access Key</caption>
-					<description>The Google Maps JavaScript API v3 does not require an API key to function correctly. However, Google strongly encourages you to load the Maps API using an APIs Console key which allows you to monitor your application's Maps API usage.</description>
+					<description>For using in Production, a Google Maps API key will be needed. For development purposes it can be left empty, but will generate text overlays 'For development purposes only' by Google</description>
 				</property> 
 				<property key="defaultLat" type="string" defaultValue="0.0">
 					<caption>Default Latitude</caption>

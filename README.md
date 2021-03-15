@@ -1,5 +1,5 @@
 ## GoogleMapsPolygon
-[Displaying and editing Polygons within your Mendix application]
+Displaying and editing Polygons and Polylines within your Mendix application
 
 ## Features
 [feature highlights]

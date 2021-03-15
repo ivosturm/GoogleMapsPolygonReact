@@ -1,2 +1,17 @@
-# GoogleMapsPolygonReact
- Mendix widget for displaying and drawing polygons and polylines built in React framework
+## GoogleMapsPolygon
+[Displaying and editing Polygons within your Mendix application]
+
+## Features
+[feature highlights]
+
+## Usage
+[step by step instructions]
+
+## Demo project
+[link to sandbox]
+
+## Issues, suggestions and feature requests
+[link to GitHub issues]
+
+## Development and contribution
+[specify contribute]

@@ -9,7 +9,6 @@ import {
 
 } from "@react-google-maps/api";
 
-import MarkerComponent, { Location } from "./Marker";
 import PolygonComponent, { PolygonProps } from "./Polygon";
 import { DefaultMapTypeEnum } from "typings/GoogleMapsPolygonProps";
 import InfoWindowComponent from "./InfoWindow";
@@ -89,13 +88,13 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
     constructor(props: GoogleMapsContainerProps) {
         super(props);
         this.state = {
-            //This is where the center of map is going to be
+            // this is where the center of map is going to be
             center : {
                 lat: Number(this.props.defaultLat), 
                 lng: Number(this.props.defaultLng)
             },
             bounds: {} as google.maps.LatLngBounds,
-            //This is how much you want to zoom in
+            // this is how much you want to zoom in
             zoom : Number(this.props.lowestZoom),
         
             showingInfoWindow: false,
@@ -165,10 +164,10 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
         }
     }
     onInfoWindowClose = () =>
-    this.setState({
-      showingInfoWindow: false,
-      infowindowObj: {} as InfoWindowProps
-    });
+        this.setState({
+        showingInfoWindow: false,
+        infowindowObj: {} as InfoWindowProps
+        });
     onDMLoad(drawingManager: google.maps.drawing.DrawingManager) {
         // generic options
         let drawingOptions = {
@@ -178,9 +177,9 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                 position : google.maps.ControlPosition.TOP_CENTER
             }
         }
-
+        // only add drawing manager if a poly object with empty coordinatesstring is fed
         if (this.props.polygons.length === 1 && this.props.polygons[0].isNew){
-            // add polygon options based
+            // add polygon options 
             let polygonDrawingOpts = {
                 drawingControl : drawingOptions.drawingControl,
                 drawingControlOptions : {
@@ -231,11 +230,7 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
     }
 
     render() { 
-       // const noOfPolygons = this.props.polygons.length;
-       // const noOfPolylines = this.props.polylines.length;
         const libraries = "drawing";
-        //console.warn("number of polygons / lines in cache: " + noOfPolygons + ' / ' + noOfPolylines); 
-       // console.debug("GoogleMapsPolygon widget: rendered");
         const containerStyle = {
             width: '800px',
             height: '600px'
@@ -250,7 +245,6 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
         reverse : boolean = false,
         draggable: boolean = false,
         isNew : boolean = false,
-        //visible: boolean,
         strokeColor : string = "",
         strokeOpacity : number = 1,
         strokeWeight : number = 1,
@@ -353,32 +347,7 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                 }
 
             })
-            let aMarker = {
-                name : 'Mountain View High School',
-                position: {
-                    lat : 37.3605,
-                    lng : -122.0675
-                }
-            }
-            this.props.locations.push(aMarker);
-            
-            aMarker = {
-                name : 'FreeStyle',
-                position: {
-                    lat : 37.3599588,
-                    lng : -122.0653
-                }
-            }
-            this.props.locations.push(aMarker);
-        
-            aMarker = {
-                name : 'Alta Vista',
-                position: {
-                    lat : 37.360188,
-                    lng : -122.064
-                }
-            }
-            this.props.locations.push(aMarker); 
+
         }
 
         if (this.state.isLoaded){
@@ -418,16 +387,6 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                         >
                         </InfoWindowComponent>
                         )} 
-                        {this.props.locations.map((location,index)=> (
-                            <MarkerComponent 
-                                key={"marker_" + index}
-                                name={location.name}
-                                position={location.position}
-                                draggable={true}
-                                onClick={(event:any) => this.mvcObjectClickHandler(event, location.name, location.position,location.mxObject)}
-                            />
-                                
-                         ))}
                         {this.props.polygons.map((polygon,index)=> (
                             (!polygon.isNew) ?
                             <PolygonComponent 
@@ -481,8 +440,8 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
         let mapBounds = new google.maps.LatLngBounds();
         let noOfObjects = 0;
         // iterate over all polygons / polylines 
-        // set the center
-        // add all positions of objects to mapBounds
+        // 1. set the center
+        // 2. add all positions of objects to mapBounds
         for (var i = 0 ; i < this.props.polygons.length ; i++){
             setCenterPolyobject(this.props.polygons[i],mapBounds,"polygon",this.props.polygons[i].name);
             noOfObjects++;
@@ -510,12 +469,7 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
     } 
     private createMapOptions() {
         // next props are exposed at maps via react-google-map library
-        // "Animation", "ControlPosition", "MapTypeControlStyle", "MapTypeId",
-        // "NavigationControlStyle", "ScaleControlStyle", "StrokePosition", "SymbolPath", "ZoomControlStyle",
-        // "DirectionsStatus", "DirectionsTravelMode", "DirectionsUnitSystem", "DistanceMatrixStatus",
-        // "DistanceMatrixElementStatus", "ElevationStatus", "GeocoderLocationType", "GeocoderStatus", "KmlLayerStatus",
-        // "MaxZoomStatus", "StreetViewStatus", "TransitMode", "TransitRoutePreference", "TravelMode", "UnitSystem"
-        return {
+      return {
             draggable:this.props.opt_drag,
             zoomControl: this.props.opt_zoomcontrol,
             zoomControlOptions: {

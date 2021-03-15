@@ -51,7 +51,7 @@ export function createPathFromString(coordinatesStringOriginal:string,reversed:b
 }
 // generic function to catch and process changes in shape of polygon / polyline
 export function onPolyObjectChange(path : any, oldcoordinates : string, type : string,attribute? : EditableValue<string>){
-    // Here do the snapping, after the polygon has been resized
+    // here do the snapping, after the polygon has been resized
     var newcoordinates = path.getArray();
     
     if (newcoordinates.toString() != oldcoordinates) {

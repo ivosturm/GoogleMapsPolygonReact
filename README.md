@@ -1,5 +1,9 @@
 ## GoogleMapsPolygon
-Displaying and editing Polygons and Polylines within your Mendix application. This widget is a rewrite of the original GoogleMapsPolygon widget, originally based on the Dojo framework. This widget uses React / TypeScript and the new pluggable widgets API. Additional features:
+Displaying and editing Polygons and Polylines within your Mendix application.
+
+This widget is a rewrite of the original GoogleMapsPolygon widget, originally based on the Dojo framework, see https://marketplace.mendix.com/link/component/105491.
+
+This widget uses React / TypeScript and the new pluggable widgets API. Additional features:
 
 * Support for all datasources, even nanoflows;
 * Support for all types of on click behavior when clicking on a Polygon / Polyline overlay;

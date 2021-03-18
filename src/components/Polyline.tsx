@@ -74,14 +74,21 @@ export default class PolylineComponent extends React.Component<PolylineProps,Pol
             addPolyEvent(polyline,newPaths,this.props.paths,this.props.coordinatesStringAttrUpdate);
         }
     };
-    shouldComponentUpdate(prevProps:any) {
-        if (prevProps.name == this.props.name && prevProps.position == this.props.center){
-            console.debug('polyline ' + this.props.name + ' NOT updated!');
+    shouldComponentUpdate(nextProps:any) {
+        if (nextProps.name == this.props.name && nextProps.center == this.props.center && nextProps.paths == this.props.paths){
+            console.debug('polyline ' + this.props.name + ' NOT updated, since name, center and path havent changed!');
             return false;
-        } else {
-            console.debug('polyline ' + this.props.name + ' updated!');
-            console.debug('old/new name: '+ prevProps.name + ' / ' + this.props.name + 'old/new position: '+ prevProps.position + ' / ' + this.props.center  );
+        } else if (nextProps.name !== this.props.name){
+            console.debug('polyline ' + this.props.name + ' updated! New name: ' + nextProps.name);
+            return false;
+        } else if (nextProps.center != this.props.center){
+            console.debug('polyline ' + this.props.name + ' updated! New center: ' + nextProps.center);
+            return false;
+        } else if (nextProps.paths !== this.props.paths){
+            console.debug('polyline ' + this.props.name + ' updated! New path: ' + nextProps.paths);
             return true;
+        } else {
+            return true
         }
     }
     render() {  

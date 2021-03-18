@@ -22,6 +22,7 @@ export interface GoogleMapsWidgetProps {
     polyObjects?: ListValue;
     coordinatesStringAttr: ListAttributeValue<string>;
     coordinatesStringAttrUpdate?: EditableValue<string>;
+    draggableInEditMode: boolean;
     holeCoordinatesStringAttr?: ListAttributeValue<string>;
     reverseCoordinatesAttr?: ListAttributeValue<boolean>;
     colorAttr: ListAttributeValue<string>;
@@ -226,7 +227,6 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
         
         const coordinates = (polyline.getPath().getArray().toString());
         updateCoordinatesAttribute(coordinates,this.props.coordinatesStringAttrUpdate);
- 
     }
 
     render() { 
@@ -266,11 +266,13 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                 // get all generic attribute values relevant for both Polygon and Polyline
                 name = String(this.props.infoWindowAttr(mxObject).value);
                 // due to bug in Mendix Pluggable Widget API, readOnly field is always true for datasource objects, hence use attribute
-                /*draggable = /*!this.props.coordinatesStringAttr(mxObject).readOnly;
-                editable = !this.props.coordinatesStringAttr(mxObject).readOnly;*/
-                draggable = editable;
-                editable = editable;
-                //visible = true;
+                /*
+                draggable = /*!this.props.coordinatesStringAttr(mxObject).readOnly;
+                editable = !this.props.coordinatesStringAttr(mxObject).readOnly;
+                */
+                if (editable && this.props.draggableInEditMode){
+                    draggable = true;
+                }
                 coordinatesString = String(this.props.coordinatesStringAttr(mxObject).value);
                 
                 if (!coordinatesString){
@@ -281,7 +283,7 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                 this.props.opacityAttr ? strokeOpacity = Number(this.props.opacityAttr(mxObject).value) : 0; 
                 this.props.strokeWeightAttr ? strokeWeight = Number(this.props.strokeWeightAttr(mxObject).value) : 2;
                 // transform the coordinates string to a path object
-                path = createPathFromString(coordinatesString,reverse);
+                path = createPathFromString(coordinatesString,reverse,false);
                 type = String(this.props.objectTypeAttr(mxObject).value);
                 
                 if (type === 'Polygon'){
@@ -309,7 +311,7 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                         holeCoordinatesString = String(this.props.holeCoordinatesStringAttr(mxObject).value);            
                         if (holeCoordinatesString){
                             // hole / inner bounds needs to be wound in opposite order of outer bounds
-                            holePath = createPathFromString(holeCoordinatesString,!reverse);               
+                            holePath = createPathFromString(holeCoordinatesString,reverse,true);               
                         }
                     }
                     if (holePath){

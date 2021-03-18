@@ -74,14 +74,21 @@ export default class PolygonComponent extends React.Component<PolygonProps,Polyg
         }
 
     };
-    shouldComponentUpdate(prevProps:any) {
-        if (prevProps.name == this.props.name && prevProps.center == this.props.center){
-            console.debug('polygon ' + this.props.name + ' NOT updated!');
+    shouldComponentUpdate(nextProps:any) {
+        if (nextProps.name == this.props.name && nextProps.center == this.props.center && nextProps.paths == this.props.paths){
+            console.debug('polygon ' + this.props.name + ' NOT updated, since name, center and path havent changed!');
             return false;
-        } else {
-            console.debug('polygon ' + this.props.name + ' updated!');
-            console.debug('old/new name: '+ prevProps.name + ' / ' + this.props.name + 'old/new position: '+ prevProps.position + ' / ' + this.props.center  );
+        } else if (nextProps.name !== this.props.name){
+            console.debug('polygon ' + this.props.name + ' updated! New name: ' + nextProps.name);
+            return false;
+        } else if (nextProps.center != this.props.center){
+            console.debug('polygon ' + this.props.name + ' updated! New center: ' + nextProps.center);
+            return false;
+        } else if (nextProps.paths !== this.props.paths){
+            console.debug('polygon ' + this.props.name + ' updated! New path: ' + nextProps.paths);
             return true;
+        } else {
+            return true
         }
     }
     render() {  
@@ -99,6 +106,7 @@ export default class PolygonComponent extends React.Component<PolygonProps,Polyg
                 onLoad={this.onLoad}
                 paths={paths}
                 options={this.props.style}
+                draggable={this.props.draggable}
                 editable={this.props.editable}
                 visible={this.props.visible}
                 onClick={this.props.onClick}

@@ -14,6 +14,7 @@ export default class GoogleMapsPolygon extends Component<GoogleMapsPolygonContai
             defaultMapType = {this.props.defaultMapType}
             coordinatesStringAttr = {this.props.coordinatesStringAttr}
             coordinatesStringAttrUpdate = {this.props.coordinatesStringAttrUpdate}
+            draggableInEditMode={this.props.draggableInEditMode}
             holeCoordinatesStringAttr = {this.props.holeCoordinatesStringArray}
             colorAttr = {this.props.colorAttr}
             strokeWeightAttr = {this.props.strokeWeightAttr}

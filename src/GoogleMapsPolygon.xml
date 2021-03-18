@@ -37,6 +37,10 @@
 			<propertyGroup caption="Configuration">
 					<systemProperty key="Visibility"/>
 					<systemProperty key="Editability"/>
+					<property key="draggableInEditMode" type="boolean" defaultValue="false">
+						<caption>Draggable in Edit mode</caption>
+					<description>If objects are editable, objects will also be draggable if this option is set to 'Yes'. Be carefull with this setting, since if a Polygon consists of thousands of points, dragging triggers an event for each changed point. The page will be performing badly with such an action...</description> 
+				</property>
 			</propertyGroup>
 			<propertyGroup caption="Zoom">
 				<property key="overruleFitBoundsZoom" type="boolean" defaultValue="false">

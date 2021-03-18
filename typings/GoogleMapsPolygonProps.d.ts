@@ -19,6 +19,7 @@ export interface GoogleMapsPolygonContainerProps {
     defaultLat: string;
     defaultLng: string;
     defaultMapType: DefaultMapTypeEnum;
+    draggableInEditMode: boolean;
     overruleFitBoundsZoom: boolean;
     lowestZoom: number;
     polyObjects?: ListValue;
@@ -53,6 +54,7 @@ export interface GoogleMapsPolygonPreviewProps {
     defaultLat: string;
     defaultLng: string;
     defaultMapType: DefaultMapTypeEnum;
+    draggableInEditMode: boolean;
     overruleFitBoundsZoom: boolean;
     lowestZoom: number | null;
     polyObjects: {} | null;

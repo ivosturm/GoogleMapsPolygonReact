@@ -16,18 +16,18 @@ Displaying and editing Polygons and Polylines within your Mendix application. Th
 
 ## Usage
 * API Key: 
- - Production: If you want to use the widget in Production a valid Google Maps API key needs to be entered in every widget instance. 
- - Development: Developing can be done without an API key, but will show messages on top of the Google Map, making it unusable in Production.
+	* Production: If you want to use the widget in Production a valid Google Maps API key needs to be entered in every widget instance. 
+	* Development: Developing can be done without an API key, but will show messages on top of the Google Map, making it unusable in Production.
 
 * Add the Google Maps Polygon widget to your page, see screenshots for Settings in Studio Pro.
 
 * At least configure:
 
-1. Data source: the Mendix objects containing the Polygon/Polyline data
-2. Coordinates attribute: required format : ((lat1,long1),(lat2,long2),(lat3,long3),(..)) or [[lat1,long1],[lat2,long2],[lat3,long3],[..]]
-3. Color attribute: any simple color (red, green, blue) or hexadecimal (with the #) will suffice;
-4. Type attribute: Enum containing values Polygon and Polyline.
-5. Infowindow attribute: the string attribute containing the to be displayed name in the infowindow popup
+	1. Data source: the Mendix objects containing the Polygon/Polyline data
+	2. Coordinates attribute: required format : ((lat1,long1),(lat2,long2),(lat3,long3),(..)) or [[lat1,long1],[lat2,long2],[lat3,long3],[..]]
+	3. Color attribute: any simple color (red, green, blue) or hexadecimal (with the #) will suffice;
+	4. Type attribute: Enum containing values Polygon and Polyline.
+	5. Infowindow attribute: the string attribute containing the to be displayed name in the infowindow popup
 
 ## Demo project
 https://googlemapspolygona-sandbox.mxapps.io

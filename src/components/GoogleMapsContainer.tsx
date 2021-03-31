@@ -2,19 +2,13 @@ import React, {Component}  from "react";
 
 import {ObjectItem,EditableValue,ListValue, ListActionValue, ListAttributeValue,ValueStatus} from "mendix";
 
-import {
-    DrawingManager,
-    GoogleMap,
-    LoadScriptNext
-
-} from "@react-google-maps/api";
-
-import PolygonComponent, { PolygonProps } from "./Polygon";
+import  { PolygonProps } from "./Polygon";
 import { DefaultMapTypeEnum } from "typings/GoogleMapsPolygonProps";
-import InfoWindowComponent from "./InfoWindow";
-import { createPathFromString, isAttributeEditable, PathArrayProps, PositionProps, setCenterPolyobject, setLineStyleOptions, updateCoordinatesAttribute } from "./PathUtils";
-import PolylineComponent, { PolylineProps } from "./Polyline";
-//import LoadScriptComponent from "./LoadScriptComponent";
+import { createPathFromString, isAttributeEditable, PathArrayProps, setLineStyleOptions } from "./PathUtils";
+import { PolylineProps } from "./Polyline";
+import { Map } from "./Map";
+
+import { LoadScriptComponent } from "./LoadScriptComponent";
 
 type DataSource = "static" | "context" | "XPath" | "microflow";
 
@@ -52,17 +46,9 @@ export interface GoogleMapsWidgetProps {
     styleArray: string;
 }
 
-export interface MapState {
-    center:{
-        lat:number;
-        lng:number;
-    } 
-    isLoaded: boolean;  
-    zoom:number; 
-    bounds: google.maps.LatLngBounds;
-    showingInfoWindow:boolean;
-    infowindowObj: InfoWindowProps;
+export interface GoogleMapsContainerState {
     map: google.maps.Map;
+    isLoaded: boolean;     
     editable: boolean;
 }
 
@@ -72,165 +58,61 @@ interface GoogleMapsContainerProps extends GoogleMapsWidgetProps {
     polylines:PolylineProps[];
 }
 
-export interface InfoWindowProps {
-    name: string;
-    position?: {
-        lat: number,
-        lng:number
-    };
-   // anchor: google.maps.MVCObject,
-    mxObject?: ObjectItem;
-}
 
-export default class GoogleMapsContainer extends Component<GoogleMapsContainerProps,MapState> {
+export default class GoogleMapsContainer extends Component<GoogleMapsContainerProps,GoogleMapsContainerState> {
     mxObjects: ObjectItem[];
-    drawingMode: google.maps.drawing.OverlayType;
     logNode: string;
     constructor(props: GoogleMapsContainerProps) {
         super(props);
         this.state = {
-            // this is where the center of map is going to be
-            center : {
-                lat: Number(this.props.defaultLat), 
-                lng: Number(this.props.defaultLng)
-            },
-            bounds: {} as google.maps.LatLngBounds,
-            // this is how much you want to zoom in
-            zoom : Number(this.props.lowestZoom),
-        
-            showingInfoWindow: false,
-            infowindowObj: {} as InfoWindowProps,
             map: {} as google.maps.Map,
             isLoaded: false,
             editable: false
         }; 
-        this.logNode = "GoogleMapsPolygon widget: ";
-        this.handleOnGoogleApiLoaded = this.handleOnGoogleApiLoaded.bind(this);
-        this.createMapOptions = this.createMapOptions.bind(this);
-        this.mvcObjectClickHandler = this.mvcObjectClickHandler.bind(this);
-        this.onDMLoad = this.onDMLoad.bind(this); 
-        this.onPolygonComplete = this.onPolygonComplete.bind(this);   
-        this.onPolylineComplete = this.onPolylineComplete.bind(this);    
+        this.logNode = "Google Maps Polygon (React) widget: ";
+
     }
     componentDidMount () {
-        console.debug('componentDidMount:', this.props);        
+        console.debug(this.logNode + 'componentDidMount:', this.props);        
     }
-    shouldComponentUpdate(nextProps:GoogleMapsContainerProps,nextState:MapState) {
-        // no changes, no reload!
+    shouldComponentUpdate(nextProps:GoogleMapsContainerProps,nextState:GoogleMapsContainerState) {
+        // no changes, no reload!G
         if (nextState == this.state && nextProps == this.props){
-            console.debug('state nor props changed!');
+            console.debug(this.logNode + 'state nor props changed!');
             return false;
         } // props changes, reload! 
         else if (nextState == this.state && nextProps != this.props){
             if (this.props.polyObjects?.status == 'loading' && nextProps.polyObjects?.status == 'available'){
-                console.debug('props changed, Mendix objects available!');
+                console.debug(this.logNode + 'props changed, Mendix objects available!');
+                return true;
+            } else if (this.props.coordinatesStringAttrUpdate != nextProps.coordinatesStringAttrUpdate || this.props.coordinatesStringAttr != nextProps.coordinatesStringAttr ){
+                console.debug(this.logNode + 'props changed, object coordinates updated via drawing!');
+                return false;
             } else {
-                console.debug('props changed');
+                console.debug(this.logNode + 'props changed');
+                return true;
             }         
-            return true;
         } // state changed, don't reload if only map was added to state! 
         else if (nextState != this.state && nextProps == this.props){
             if (!this.state.isLoaded && nextState.isLoaded){
-                console.debug('state isLoaded changed!');
+                console.debug(this.logNode + 'state isLoaded changed!');
                 return false;
             } else {
                 console.debug('state changed!');
                 return true;
             }           
         } else if (nextState != this.state && nextProps != this.props){
-            console.debug('state and props changed!');
+            console.debug(this.logNode + 'state and props changed!');
             return true;
         } // shouldn't occur
         else {
             return false;
-        }
-              
+        }           
     }
-    mvcObjectClickHandler(event:any, name: string, center?: PositionProps,mxObject?: ObjectItem){
-        // trigger infowindow functionality if enabled in interaction settings
-        if (!this.props.int_disableInfoWindow && event && center){
-            this.setState({
-                showingInfoWindow : true,
-                infowindowObj : {
-                    name: name,
-                    position:center,
-                    mxObject: mxObject,
-
-                }
-            })
-        } 
-        // else trigger action call directly
-        else if (mxObject && this.props.int_onClick){
-            this.props.int_onClick(mxObject).execute();
-        }
-    }
-    onInfoWindowClose = () =>
-        this.setState({
-        showingInfoWindow: false,
-        infowindowObj: {} as InfoWindowProps
-        });
-    onDMLoad(drawingManager: google.maps.drawing.DrawingManager) {
-        // generic options
-        let drawingOptions = {
-            drawingControl : true,
-            drawingControlOptions : {
-                drawingModes : [google.maps.drawing.OverlayType.POLYGON,google.maps.drawing.OverlayType.POLYLINE],
-                position : google.maps.ControlPosition.TOP_CENTER
-            }
-        }
-        // only add drawing manager if a poly object with empty coordinatesstring is fed
-        if (this.props.polygons.length === 1 && this.props.polygons[0].isNew){
-            // add polygon options 
-            let polygonDrawingOpts = {
-                drawingControl : drawingOptions.drawingControl,
-                drawingControlOptions : {
-                    drawingModes : [google.maps.drawing.OverlayType.POLYGON],
-                    position : drawingOptions.drawingControlOptions.position
-                },
-                polygonOptions : {
-                    strokeColor : this.props.polygons[0].style.strokeColor,
-                    strokeOpacity : this.props.polygons[0].style.strokeOpacity,
-                    strokeWeight : this.props.polygons[0].style.strokeWeight,
-                    fillColor : this.props.polygons[0].style.fillColor,
-                    fillOpacity : this.props.polygons[0].style.fillOpacity
-                }
-            }
-            drawingManager.setDrawingMode(polygonDrawingOpts.drawingControlOptions.drawingModes[0])
-            drawingManager.setOptions(polygonDrawingOpts);
-        } else if (this.props.polylines.length === 1 && this.props.polylines[0].isNew){
-            // add polyline options
-            let polylineDrawingOpts = {
-                drawingControl : drawingOptions.drawingControl,
-                drawingControlOptions : {
-                    drawingModes : [google.maps.drawing.OverlayType.POLYLINE],
-                    position : drawingOptions.drawingControlOptions.position
-                },
-                polylineOptions : {
-                    strokeColor : this.props.polylines[0].style.strokeColor,
-                    strokeOpacity : this.props.polylines[0].style.strokeOpacity,
-                    strokeWeight : this.props.polylines[0].style.strokeWeight
-                }
-            }
-            drawingManager.setDrawingMode(polylineDrawingOpts.drawingControlOptions.drawingModes[0])
-            drawingManager.setOptions(polylineDrawingOpts);       
-        } else {
-            drawingOptions.drawingControl = false;
-            drawingManager.setOptions(drawingOptions);
-        }  
-    }
-    onPolygonComplete(polygon : google.maps.Polygon){
-        
-        const coordinates = (polygon.getPath().getArray().toString());
-        updateCoordinatesAttribute(coordinates,this.props.coordinatesStringAttrUpdate);
-    }
-    onPolylineComplete(polyline : google.maps.Polyline){
-        
-        const coordinates = (polyline.getPath().getArray().toString());
-        updateCoordinatesAttribute(coordinates,this.props.coordinatesStringAttrUpdate);
-    }
-
     render() { 
-        const libraries = "drawing";
+
+        const libraries  = "drawing";
+
         const containerStyle = {
             width: '800px',
             height: '600px'
@@ -254,7 +136,7 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
 
         // create polygons / polylines 
         // showing of infowindow is handled via state, if shown, don't recreate already existing objects
-        if (datasource && datasource.items && !this.state.showingInfoWindow){
+        if (datasource && datasource.items){
             let editable = false;
             if (this.props.coordinatesStringAttrUpdate){
                 if (isAttributeEditable("coordinatesStringAttrUpdate",this.props.coordinatesStringAttrUpdate)){
@@ -285,7 +167,8 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                 // transform the coordinates string to a path object
                 path = createPathFromString(coordinatesString,reverse,false);
                 type = String(this.props.objectTypeAttr(mxObject).value);
-                
+                let indexObj = -1;
+
                 if (type === 'Polygon'){
                     
                     let polygonObj = {
@@ -317,8 +200,19 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                     if (holePath){
                         polygonObj.holes = holePath.paths;
                     }
-        
+                    indexObj = -1;
+                    this.props.polygons.filter(function(polygon,index){
+                        if (polygon.guid == polygonObj.guid){
+                            indexObj = index;
+                            return;
+                        }
+                    });
+                    // object exists -> remove old by index and add new
+                    if (indexObj > -1) {
+                        this.props.polygons.splice(indexObj,1);  
+                    }
                     this.props.polygons.push(polygonObj);
+                    
                 } else if (type === 'Polyline'){
                     let lineType = "Normal";
                     if (this.props.lineTypeAttr){
@@ -342,151 +236,60 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                     } as PolylineProps;
 
                     if (lineType === "Dotted" || lineType === "Dashed") {
-                        // set the stying options correcltly for a dotted / dashed line
+                        // set the stying options correctly for a dotted / dashed line
                         setLineStyleOptions(lineType, polylineObj);
+                    }
+                    // reset index as it could have been updated from other object
+                    indexObj = -1;
+                    this.props.polylines.filter(function(polyline,index){
+                        if (polyline.guid == polylineObj.guid){
+                            indexObj = index;
+                            return;
+                        }
+                    });
+                    // object exists -> remove old by index and add new
+                    if (indexObj > -1) {
+                        this.props.polylines.splice(indexObj,1);  
                     }
                     this.props.polylines.push(polylineObj);
                 }
 
             })
-
-        }
-
-        if (this.state.isLoaded){
-            this.handleOnGoogleApiLoaded(this.state.map);
         }
 
         return (
             <div style={{ height: '90vh', width: '90%' }}>
-                <LoadScriptNext
-                    googleMapsApiKey={this.props.apiKey}
+                <LoadScriptComponent
+                    apiKey={this.props.apiKey}
                     libraries={[libraries]}
-                    id={"_com.mendix.widget.custom.Maps.Maps"}
                 >
-                    <GoogleMap
+                    <Map
                         mapContainerStyle={containerStyle}
-                        center={this.state.center}
-                        zoom={this.state.zoom} 
-                        onLoad={map => {this.handleOnGoogleApiLoaded(map)}} 
-
+                        defaultLat={this.props.defaultLat}
+                        defaultLng={this.props.defaultLng}
+                        lowestZoom={this.props.lowestZoom}
+                        coordinatesStringAttrUpdate={this.props.coordinatesStringAttrUpdate}
+                        polygons={this.props.polygons}
+                        polylines={this.props.polylines}
+                        int_disableInfoWindow={this.props.int_disableInfoWindow}
+                        int_infoWindowNameLabel={this.props.int_infoWindowNameLabel}
+                        int_onClick={this.props.int_onClick}
+                        int_onClickButtonClass={this.props.int_onClickButtonClass}
+                        int_onClickButtonLabel={this.props.int_onClickButtonLabel}
+                        overruleFitBoundsZoom={this.props.overruleFitBoundsZoom}
+                        defaultMapType={this.props.defaultMapType}
+                        opt_drag={this.props.opt_drag}
+                        opt_mapcontrol={this.props.opt_mapcontrol}
+                        opt_scroll={this.props.opt_scroll}
+                        opt_streetview={this.props.opt_streetview}
+                        opt_tilt={this.props.opt_tilt}
+                        opt_zoomcontrol={this.props.opt_zoomcontrol}
+                        styleArray={this.props.styleArray}
                     >
-                        <DrawingManager                        
-                            onLoad={this.onDMLoad}
-                            onPolygonComplete={this.onPolygonComplete}
-                            onPolylineComplete={this.onPolylineComplete}
-                        />
-                        {this.state.showingInfoWindow &&  (   
-                        <InfoWindowComponent
-                            onCloseClick={this.onInfoWindowClose}
-                            //anchor={this.state.infowindowObj.anchor}
-                            name={this.state.infowindowObj.name}
-                            position={this.state.infowindowObj.position} 
-                            className = {this.props.int_onClickButtonClass}
-                            onClickButtonLabel = {this.props.int_onClickButtonLabel}
-                            infoWindowLabel = {this.props.int_infoWindowNameLabel}
-                            onClickAction = {this.props.int_onClick}  
-                            mxObject = {this.state.infowindowObj.mxObject || {} as ObjectItem}          
-                        >
-                        </InfoWindowComponent>
-                        )} 
-                        {this.props.polygons.map((polygon,index)=> (
-                            (!polygon.isNew) ?
-                            <PolygonComponent 
-                                isNew={false}
-                                key={"polygon_" + index}
-                                name={polygon.name}
-                                center={polygon.center}
-                                onClick={(event:any) => this.mvcObjectClickHandler(event, polygon.name, polygon.center,polygon.mxObject)}
-                                guid={polygon.guid}
-                                mxObject={polygon.mxObject}
-                                paths={polygon.paths}
-                                holes={polygon.holes}
-                                style={polygon.style}
-                                visible={polygon.visible}
-                                editable={polygon.editable}
-                                draggable={polygon.draggable}
-                                coordinatesStringAttrUpdate={this.props.coordinatesStringAttrUpdate} 
-                            /> :
-                            null 
-                        ))}
-                        {this.props.polylines.map((polyline,index)=> (
-                            (!polyline.isNew) ?
-                            <PolylineComponent 
-                                isNew={false}
-                                key={"polygon_" + index}
-                                name={polyline.name}
-                                lineType={polyline.lineType}
-                                center={polyline.center}
-                                onClick={(event:any) => this.mvcObjectClickHandler(event, polyline.name, polyline.center,polyline.mxObject)}
-                                guid={polyline.guid}
-                                mxObject={polyline.mxObject}
-                                paths={polyline.paths}
-                                style={polyline.style}
-                                visible={polyline.visible}
-                                editable={polyline.editable}
-                                draggable={polyline.draggable} 
-                                coordinatesStringAttrUpdate={this.props.coordinatesStringAttrUpdate}
-                            /> :
-                            null 
-                        ))}
-                    </GoogleMap>
-                </LoadScriptNext>
+                    </Map>
+                </LoadScriptComponent>
             </div>      
         ); 
-    }
-    private handleOnGoogleApiLoaded (map:google.maps.Map)  {
-        // store map in state, so this function can be called a second time once the API and map are already loaded
-        if (!this.state.isLoaded){
-            this.setState({map:map,isLoaded : true})
-        }
-        let mapBounds = new google.maps.LatLngBounds();
-        let noOfObjects = 0;
-        // iterate over all polygons / polylines 
-        // 1. set the center
-        // 2. add all positions of objects to mapBounds
-        for (var i = 0 ; i < this.props.polygons.length ; i++){
-            setCenterPolyobject(this.props.polygons[i],mapBounds,"polygon",this.props.polygons[i].name);
-            noOfObjects++;
-        }
-
-        for (var j = 0 ; j < this.props.polylines.length ; j++){
-            setCenterPolyobject(this.props.polylines[j],mapBounds,"polyline",this.props.polylines[j].name);
-            noOfObjects++;
-        } 
-    
-        if (noOfObjects == 1 && this.props.overruleFitBoundsZoom){
-            console.warn('overruling zoomlevel to: ' + this.props.lowestZoom);
-            map.setCenter(mapBounds.getCenter());
-            map.setZoom(this.props.lowestZoom);
-        } else {
-            map.fitBounds(mapBounds);
-        }      
-        // add map options once the google API is loaded    
-        let mapOptions = this.createMapOptions();
-        if (this.props.styleArray !== "") {
-            mapOptions.styles = JSON.parse(this.props.styleArray);
-        }
-        map.setOptions(mapOptions);       
-
-    } 
-    private createMapOptions() {
-        // next props are exposed at maps via react-google-map library
-      return {
-            draggable:this.props.opt_drag,
-            zoomControl: this.props.opt_zoomcontrol,
-            zoomControlOptions: {
-                position: google.maps.ControlPosition.RIGHT_CENTER,
-                style: google.maps.ZoomControlStyle.SMALL
-            },
-            mapTypeId: google.maps.MapTypeId[this.props.defaultMapType] || google.maps.MapTypeId.ROADMAP,
-            mapTypeControl: this.props.opt_mapcontrol,
-            mapTypeControlOptions: {
-               position: google.maps.ControlPosition.TOP_LEFT
-            },
-            streetViewControl: this.props.opt_streetview,
-            tilt: parseInt(this.props.opt_tilt.replace("d", ""), 10),
-            styles:undefined
-        };
     }
 }
 

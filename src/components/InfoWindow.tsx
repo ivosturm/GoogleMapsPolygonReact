@@ -20,22 +20,24 @@ export interface InfoWindowExposedProps {
 }
  
 export default class InfoWindowComponent extends Component<InfoWindowProps> {
+    logNode: string;
     constructor(props: InfoWindowProps) {
         super(props);
+        this.logNode = "Google Maps Polygon (React) widget: InfoWindow Component: ";
         this.onClickAction = this.onClickAction.bind(this);
     }
     onClickAction = () => {
         if (this.props.mxObject && this.props.mxObject.id && this.props.onClickAction){
-            console.debug('triggering action with input mxobjectid: ' + this.props.mxObject.id)
+            console.debug(this.logNode + 'triggering action with input mxobjectid: ' + this.props.mxObject.id)
             this.props.onClickAction(this.props.mxObject).execute();
         } else {
-            console.error('triggering action without an input object!');
+            console.error(this.logNode + 'triggering action without an input object!');
             
         }
     }
     componentDidUpdate(prevProps:any) {
         if (prevProps){
-            console.debug('infowindow componentDidUpdate called');
+            console.debug(this.logNode + 'componentDidUpdate');
         }      
     }
     render(){  

@@ -1,12 +1,13 @@
 
 import {
- LoadScript
-
+LoadScriptNext
 } from "@react-google-maps/api";
+import { Libraries } from "@react-google-maps/api/dist/utils/make-load-script-url";
 import React from "react";
 
 export interface LoadScriptComponentInterface {
     apiKey: string;
+    libraries: Libraries;
 }
 
 interface LoadScriptComponentState {
@@ -14,42 +15,66 @@ interface LoadScriptComponentState {
     isLoaded : boolean;
 }
 
-export default class LoadScriptComponent extends React.Component<LoadScriptComponentInterface,LoadScriptComponentState>{
-    //googleScriptRef: React.RefObject<LoadScript>;
+// define outside of component, else it will trigger warnings in browser
+const libaries = "drawing"; 
+
+export class LoadScriptComponent extends React.Component<LoadScriptComponentInterface,LoadScriptComponentState>{
+    logNode: string;
     constructor(props: LoadScriptComponentInterface) {
         super(props);
-        //this.googleScriptRef = React.createRef();
-        /*this.state = {
+        this.logNode = "Google Maps Polygon (React) widget: LoadScriptComponent: ";
+        this.state = {
             isLoaded : false
-        }*/
+        }
     }
-   /* componentDidMount(){
+    componentDidMount(){
         if (!this.state.isLoaded){
-            console.error('Updating state to isLoaded=true');
+            console.debug(this.logNode + 'componentDidMount: Updating state to isLoaded=true');
             this.setState({ isLoaded: true});
         } 
     }
-    shouldComponentUpdate(nextState:any) { 
-        if (nextState.isLoaded != this.state.isLoaded) { 
-            console.error('Load Script loading Google Maps API first time!');
+    shouldComponentUpdate(_nextProps:any,nextState:any) { 
+        if (nextState.isLoaded == this.state.isLoaded == true){
+            // triggered when widget is reloaded because of on click of MVC Object, need to reload to show infowindow
+            console.debug(this.logNode + 'shouldComponentUpdate: Load Script loaded Google Maps API before! nextState.isLoaded: ' + nextState.isLoaded + ' this.state.isLoaded: ' +  this.state.isLoaded);
             return true;
-        } else {
-            console.error('Load Script already loaded Google Maps API, not rerendering Load Script!');
-           return false;
+        } else if (window.google && window.google.maps){
+            console.debug(this.logNode + 'shouldComponentUpdate: Load Script loaded Google Maps API before! nextState.isLoaded: ' + nextState.isLoaded + ' this.state.isLoaded: ' +  this.state.isLoaded);
+            return false;
         }
-    }*/
+        else if (nextState.isLoaded != this.state.isLoaded) { 
+            console.debug(this.logNode + 'shouldComponentUpdate: Load Script loaded Google Maps API first time! nextState.isLoaded: ' + nextState.isLoaded + ' this.state.isLoaded: ' +  this.state.isLoaded);
+            return false;
+        } else {
+            console.debug(this.logNode + 'shouldComponentUpdate: Load Script not loaded yet, loading...! nextState.isLoaded: ' + nextState.isLoaded + ' this.state.isLoaded: ' +  this.state.isLoaded);;
+           return true;
+        }
+    }
     render(){
-       // if (!this.state.isLoaded){
-           console.error('Rendering Load Script!');
-            return (<LoadScript //ref={this.googleScriptRef}
-                googleMapsApiKey={this.props.apiKey}
-                libraries={["drawing"]}
-                id={"_com.mendix.widget.custom.Maps.Maps"}
-            ></LoadScript>
+        // if not loaded yet, add script
+        if (!this.state.isLoaded) {
+            return (
+                <div id="loadScriptWrapper">
+                    <LoadScriptNext
+                        googleMapsApiKey={this.props.apiKey}
+                        libraries={[libaries]}
+                        id={"_com.mendix.widget.custom.Maps.Maps"}  
+                    >
+                        <div className="loadScriptChildrenWrapper">
+                            {this.props.children}
+                        </div>
+                    </LoadScriptNext>
+                </div>
             )
-        //} else {
-          //  console.error('Not rendering Load Script!');
-            //return null; 
-       // }
-    }   
+        } else 
+        // else just return children (map + infowindow + objects)
+        {
+            return (<div id="loadScriptWrapper">
+                        <div className="loadScriptChildrenWrapper">
+                            {this.props.children}
+                        </div>
+                    </div>                
+            )
+        }
+    }
 }

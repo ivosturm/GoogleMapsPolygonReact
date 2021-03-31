@@ -34,8 +34,10 @@ export interface PolygonState {
 }
 
 export default class PolygonComponent extends React.Component<PolygonProps,PolygonState> {
+    logNode: string;
     constructor(props: PolygonProps) {
         super(props);
+        this.logNode = "Google Maps Polygon (React) widget: Polygon Component: ";
         this.state = {
             polygon: {} as google.maps.Polygon,
             center: {} as google.maps.LatLng
@@ -76,26 +78,26 @@ export default class PolygonComponent extends React.Component<PolygonProps,Polyg
     };
     shouldComponentUpdate(nextProps:any) {
         if (nextProps.name == this.props.name && nextProps.center == this.props.center && nextProps.paths == this.props.paths){
-            console.debug('polygon ' + this.props.name + ' NOT updated, since name, center and path havent changed!');
+            console.debug(this.logNode + 'polygon ' + this.props.name + ' NOT updated, since name, center and path havent changed!');
             return false;
         } else if (nextProps.name !== this.props.name){
-            console.debug('polygon ' + this.props.name + ' updated! New name: ' + nextProps.name);
+            console.debug(this.logNode + 'polygon ' + this.props.name + ' updated! New name: ' + nextProps.name);
             return false;
         } else if (nextProps.center != this.props.center){
-            console.debug('polygon ' + this.props.name + ' updated! New center: ' + nextProps.center);
+            console.debug(this.logNode + 'polygon ' + this.props.name + ' updated! New center: ' + nextProps.center);
             return false;
         } else if (nextProps.paths !== this.props.paths){
-            console.debug('polygon ' + this.props.name + ' updated! New path: ' + nextProps.paths);
+            console.debug(this.logNode + 'polygon ' + this.props.name + ' updated! New path: ' + nextProps.paths);
             return true;
         } else {
-            return true
+            return true;
         }
     }
     render() {  
       // if holes are added then add the holes array as well
         let paths = [];
         if (this.props.holes){
-            console.warn('polygon ' + this.props.name + ' has holes!')
+            console.debug(this.logNode + 'polygon ' + this.props.name + ' has holes!')
             paths = [this.props.paths,this.props.holes]
         } else {
             paths = [this.props.paths]

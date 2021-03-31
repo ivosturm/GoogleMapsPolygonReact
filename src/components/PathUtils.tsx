@@ -10,6 +10,8 @@ export interface PositionProps {
     lng: number;
 }
 
+const logNode = "Google Maps Polygon (React) widget: Path Utils: "; 
+
 export function createPathFromString(coordinatesStringOriginal:string,reversedLatLng:boolean,sortLatLngPairsReversed:boolean): PathArrayProps {
     let lat : string[] = [],
 	lng : string[] = [],
@@ -60,11 +62,11 @@ export function onPolyObjectChange(path : any, oldcoordinates : string, type : s
     var newcoordinates = path.getArray();
 
     if (newcoordinates.toString() != oldcoordinates) {
-        console.debug('coordinates changed via ' + type + ' event..');
+        console.debug(logNode + 'coordinates changed via ' + type + ' event..');
         if (attribute){
-            console.debug('trying to change attribute. First checking editability..');
+            console.debug(logNode + 'trying to change attribute. First checking editability..');
             if (isAttributeEditable("coordinatesStringAttrUpdate",attribute)){
-                console.debug('attribute editable.. Setting coordinates: ' + newcoordinates);
+                console.debug(logNode + 'attribute editable.. Setting coordinates: ' + newcoordinates);
                 attribute.setValue(newcoordinates.toString());
             };
         } 
@@ -111,13 +113,13 @@ export function setCenterPolyobject(polyObject:any,mapBounds:google.maps.LatLngB
         //console.warn("polyobject center set to lat / lng: " + centerLatLng.lat() + ' / ' + centerLatLng.lng());
         
     } else if (polyObject && polyObject.paths && (isNaN(polyObject.paths[0].lat) || isNaN(polyObject.paths[0].lng))){
-        console.warn(type + ' ' + name + " has illegal latitude / longitude. This can happen when " + type + " still needs to be drawn.")
+        console.warn(logNode + type + ' ' + name + " has illegal latitude / longitude. This can happen when " + type + " still needs to be drawn.")
     }
     return mapBounds;
 }
 
 export function updateCoordinatesAttribute(coordinates : string, coordinatesStringAttrUpdate? : EditableValue<string>){
-    console.info('completed drawing! Coordinates retrieved: ' + coordinates);
+    console.info(logNode + 'completed drawing! Coordinates retrieved: ' + coordinates);
     if (coordinatesStringAttrUpdate){
         if (isAttributeEditable("coordinatesStringAttrUpdate",coordinatesStringAttrUpdate)){
             coordinatesStringAttrUpdate.setValue(coordinates);
@@ -160,7 +162,7 @@ export function isAttributeEditable(propName: string, prop: EditableValue): bool
     let editable = false;
     if (prop && prop.status === "available" && !prop.readOnly) {
         editable = true;
-        console.warn("GoogleMapsPolygon: " + propName + " is editable.");
+        console.debug(logNode + propName + " is editable.");
     }
     return editable;
 }

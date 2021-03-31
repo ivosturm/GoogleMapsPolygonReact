@@ -10,7 +10,7 @@
     </icon>
   <properties>
 		<propertyGroup caption="Behavior">
-			<propertyGroup caption="Map">
+			<propertyGroup caption="Map">	
 				<property key="apiAccessKey" type="string" required="false">
 					<caption>Maps API Access Key</caption>
 					<description>For using in Production, a Google Maps API key will be needed. For development purposes it can be left empty, but will generate text overlays 'For development purposes only' by Google</description>

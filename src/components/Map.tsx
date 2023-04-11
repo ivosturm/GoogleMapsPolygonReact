@@ -2,9 +2,9 @@ import {
     DrawingManager,
     GoogleMap
 } from "@react-google-maps/api";
-import React from "react";
+import React, { createElement } from "react";
 
-import {ObjectItem, ListActionValue, EditableValue} from "mendix";
+import {ObjectItem, ListActionValue, EditableValue, ListWidgetValue} from "mendix";
 
 import InfoWindowComponent from "./InfoWindow";
 import { PositionProps, setCenterPolyobject, updateCoordinatesAttribute } from "./PathUtils";
@@ -31,10 +31,8 @@ interface GoogleMapsPropsExtended {
     polygons?:PolygonProps[];
     polylines?:PolylineProps[];
     int_disableInfoWindow: boolean;
-    int_infoWindowNameLabel: string;
-    int_onClick?: ListActionValue;
-    int_onClickButtonClass: string;
-    int_onClickButtonLabel: string;
+    int_onClick?: ListActionValue; 
+    infoWindowWidget?: ListWidgetValue;
     overruleFitBoundsZoom: boolean;
     defaultMapType: DefaultMapTypeEnum;
     opt_drag: boolean;
@@ -215,7 +213,7 @@ export class Map extends React.Component<GoogleMapsPropsExtended,MapState> {
             zoomControl: this.props.opt_zoomcontrol,
             zoomControlOptions: {
                 position: google.maps.ControlPosition.RIGHT_CENTER,
-                style: google.maps.ZoomControlStyle.SMALL
+                style: "SMALL"
             },
             mapTypeId: google.maps.MapTypeId[this.props.defaultMapType] || google.maps.MapTypeId.ROADMAP,
             mapTypeControl: this.props.opt_mapcontrol,
@@ -237,7 +235,7 @@ export class Map extends React.Component<GoogleMapsPropsExtended,MapState> {
             mapContainerStyle={this.props.mapContainerStyle}
             center={this.state.center}
             zoom={this.state.zoom} 
-            onLoad={(map: google.maps.Map<Element>) => {this.handleOnGoogleApiLoaded(map)}}
+            onLoad={(map: google.maps.Map) => {this.handleOnGoogleApiLoaded(map)}}
         > 
             <DrawingManager                        
                 onLoad={this.onDMLoad}
@@ -249,10 +247,7 @@ export class Map extends React.Component<GoogleMapsPropsExtended,MapState> {
                 onCloseClick={this.onInfoWindowClose}
                 name={this.state.infowindowObj.name}
                 position={this.state.infowindowObj.position} 
-                className = {this.props.int_onClickButtonClass}
-                onClickButtonLabel = {this.props.int_onClickButtonLabel}
-                infoWindowLabel = {this.props.int_infoWindowNameLabel}
-                onClickAction = {this.props.int_onClick}  
+                infoWindowWidget={this.props.infoWindowWidget}
                 mxObject = {this.state.infowindowObj.mxObject || {} as ObjectItem}          
             >
             </InfoWindowComponent>

@@ -3,8 +3,8 @@
  * WARNING: All changes made to this file will be overwritten
  * @author Mendix UI Content Team
  */
-import { CSSProperties } from "react";
-import { EditableValue, ListValue, ListActionValue, ListAttributeValue } from "mendix";
+import { ComponentType, CSSProperties } from "react";
+import { EditableValue, ListValue, ListActionValue, ListAttributeValue, ListWidgetValue } from "mendix";
 
 export type DefaultMapTypeEnum = "ROADMAP" | "SATELLITE" | "HYBRID" | "TERRAIN";
 
@@ -30,13 +30,10 @@ export interface GoogleMapsPolygonContainerProps {
     colorAttr: ListAttributeValue<string>;
     strokeWeightAttr?: ListAttributeValue<BigJs.Big>;
     opacityAttr?: ListAttributeValue<BigJs.Big>;
-    infoWindowAttr: ListAttributeValue<string>;
     objectTypeAttr: ListAttributeValue<string>;
     lineTypeAttr?: ListAttributeValue<string>;
+    infoWindowWidget?: ListWidgetValue;
     disableInfoWindow: boolean;
-    infoWindowNameLabel: string;
-    onClickButtonClass: string;
-    onClickButtonLabel: string;
     onClick?: ListActionValue;
     opt_drag: boolean;
     opt_mapcontrol: boolean;
@@ -65,13 +62,10 @@ export interface GoogleMapsPolygonPreviewProps {
     colorAttr: string;
     strokeWeightAttr: string;
     opacityAttr: string;
-    infoWindowAttr: string;
     objectTypeAttr: string;
     lineTypeAttr: string;
+    infoWindowWidget: { widgetCount: number; renderer: ComponentType };
     disableInfoWindow: boolean;
-    infoWindowNameLabel: string;
-    onClickButtonClass: string;
-    onClickButtonLabel: string;
     onClick: {} | null;
     opt_drag: boolean;
     opt_mapcontrol: boolean;

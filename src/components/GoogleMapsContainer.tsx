@@ -1,6 +1,6 @@
-import React, {Component}  from "react";
+import {Component, createElement}  from "react";
 
-import {ObjectItem,EditableValue,ListValue, ListActionValue, ListAttributeValue,ValueStatus} from "mendix";
+import {ObjectItem,EditableValue,ListValue, ListActionValue, ListAttributeValue,ValueStatus, ListWidgetValue} from "mendix";
 
 import  { PolygonProps } from "./Polygon";
 import { DefaultMapTypeEnum } from "typings/GoogleMapsPolygonProps";
@@ -22,7 +22,6 @@ export interface GoogleMapsWidgetProps {
     colorAttr: ListAttributeValue<string>;
     strokeWeightAttr?: ListAttributeValue<BigJs.Big>;
     opacityAttr?: ListAttributeValue<BigJs.Big>;
-    infoWindowAttr: ListAttributeValue<string>;
     objectTypeAttr: ListAttributeValue<string>;
     lineTypeAttr?: ListAttributeValue<string>;
     defaultMapType: DefaultMapTypeEnum;
@@ -30,11 +29,9 @@ export interface GoogleMapsWidgetProps {
     defaultLat: string;
     defaultLng: string;
     dataSource: DataSource;
-    int_disableInfoWindow: boolean;
-    int_infoWindowNameLabel: string;
+    disableInfoWindow: boolean;
     int_onClick?: ListActionValue;
-    int_onClickButtonClass: string;
-    int_onClickButtonLabel: string;
+    infoWindowWidget?: ListWidgetValue;
     overruleFitBoundsZoom: boolean;
     lowestZoom: number;
     opt_drag: boolean;
@@ -146,7 +143,6 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
             this.mxObjects = datasource.items;
             this.mxObjects.map(mxObject => {
                 // get all generic attribute values relevant for both Polygon and Polyline
-                name = String(this.props.infoWindowAttr(mxObject).value);
                 // due to bug in Mendix Pluggable Widget API, readOnly field is always true for datasource objects, hence use attribute
                 /*
                 draggable = /*!this.props.coordinatesStringAttr(mxObject).readOnly;
@@ -271,11 +267,8 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                         coordinatesStringAttrUpdate={this.props.coordinatesStringAttrUpdate}
                         polygons={this.props.polygons}
                         polylines={this.props.polylines}
-                        int_disableInfoWindow={this.props.int_disableInfoWindow}
-                        int_infoWindowNameLabel={this.props.int_infoWindowNameLabel}
-                        int_onClick={this.props.int_onClick}
-                        int_onClickButtonClass={this.props.int_onClickButtonClass}
-                        int_onClickButtonLabel={this.props.int_onClickButtonLabel}
+                        int_disableInfoWindow={this.props.disableInfoWindow}
+                        infoWindowWidget={this.props.infoWindowWidget}
                         overruleFitBoundsZoom={this.props.overruleFitBoundsZoom}
                         defaultMapType={this.props.defaultMapType}
                         opt_drag={this.props.opt_drag}

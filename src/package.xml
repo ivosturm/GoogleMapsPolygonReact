@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <package xmlns="http://www.mendix.com/package/1.0/">
-    <clientModule name="GoogleMapsPolygonReact" version="1.1.0" xmlns="http://www.mendix.com/clientModule/1.0/">
+    <clientModule name="GoogleMapsPolygonReact" version="1.2.0" xmlns="http://www.mendix.com/clientModule/1.0/">
         <widgetFiles>
             <widgetFile path="GoogleMapsPolygon.xml"/>
         </widgetFiles>
         <files>
-            <file path="first consulting/googlemapspolygon"/>
+            <file path="valcon/googlemapspolygon"/>
         </files>
     </clientModule>
 </package>

@@ -1,5 +1,5 @@
 import { Polygon } from "@react-google-maps/api";
-import React from "react";
+import React, { createElement } from "react";
 import { ObjectItem,EditableValue} from "mendix";
 import { addPolyEvent, PositionProps } from "./PathUtils";
 

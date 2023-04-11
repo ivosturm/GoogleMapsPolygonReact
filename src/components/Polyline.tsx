@@ -1,5 +1,5 @@
 import { Polyline } from "@react-google-maps/api";
-import React from "react";
+import React, { createElement } from "react";
 import { addPolyEvent } from "./PathUtils";
 import { PolyProps } from "./Polygon";
 

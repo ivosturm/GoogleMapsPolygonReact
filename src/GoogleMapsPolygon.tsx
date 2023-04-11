@@ -1,4 +1,4 @@
-import React,{ Component, ReactNode } from "react";
+import { Component, ReactNode, createElement } from "react";
 
 import GoogleMapsContainer  from "./components/GoogleMapsContainer";
 
@@ -19,7 +19,6 @@ export default class GoogleMapsPolygon extends Component<GoogleMapsPolygonContai
             colorAttr = {this.props.colorAttr}
             strokeWeightAttr = {this.props.strokeWeightAttr}
             opacityAttr = {this.props.opacityAttr}
-            infoWindowAttr = {this.props.infoWindowAttr}
             objectTypeAttr = {this.props.objectTypeAttr}
             lineTypeAttr = {this.props.lineTypeAttr}
             reverseCoordinatesAttr = {this.props.reverseCoordinatesAttr}         
@@ -29,11 +28,9 @@ export default class GoogleMapsPolygon extends Component<GoogleMapsPolygonContai
             opt_streetview = {this.props.opt_streetview}
             opt_zoomcontrol = {this.props.opt_zoomcontrol}
             opt_tilt = {this.props.opt_tilt}
-            int_disableInfoWindow = {this.props.disableInfoWindow}
-            int_infoWindowNameLabel = {this.props.infoWindowNameLabel}
-            int_onClick = {this.props.onClick}
-            int_onClickButtonClass = {this.props.onClickButtonClass}
-            int_onClickButtonLabel = {this.props.onClickButtonLabel}
+            disableInfoWindow={this.props.disableInfoWindow}
+            int_onClick={this.props.onClick}
+            infoWindowWidget={this.props.infoWindowWidget}
             apiKey={this.props.apiAccessKey} 
             defaultLat = {this.props.defaultLat}    
             defaultLng = {this.props.defaultLng}

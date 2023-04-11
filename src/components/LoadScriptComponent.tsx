@@ -3,7 +3,7 @@ import {
 LoadScriptNext
 } from "@react-google-maps/api";
 import { Libraries } from "@react-google-maps/api/dist/utils/make-load-script-url";
-import React from "react";
+import React, { createElement } from "react";
 
 export interface LoadScriptComponentInterface {
     apiKey: string;

@@ -73,7 +73,7 @@ export default class PolylineComponent extends React.Component<PolylineProps,Pol
 
         //Add a dynamic listener to the polygon or polygon click event for the NewEdit screen
         if (this.props.editable && this.props.coordinatesStringAttrUpdate) {
-            addPolyEvent(polyline,newPaths,this.props.paths,this.props.coordinatesStringAttrUpdate);
+            addPolyEvent(newPaths,this.props.paths,this.props.coordinatesStringAttrUpdate);
         }
     };
     shouldComponentUpdate(nextProps:any) {

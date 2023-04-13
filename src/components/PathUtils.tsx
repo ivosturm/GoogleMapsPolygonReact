@@ -73,21 +73,15 @@ export function onPolyObjectChange(path : any, oldcoordinates : string, type : s
     }
 } 
 
-export function  addPolyEvent(polyObject : google.maps.MVCObject, paths : google.maps.MVCArray<google.maps.LatLng>,oldPaths:PositionProps[],attribute? : EditableValue<string>){
-    google.maps.event.addListener(polyObject, 'mouseup', ( () => {
+export function  addPolyEvent(paths : google.maps.MVCArray<google.maps.LatLng>,oldPaths:PositionProps[],attribute? : EditableValue<string>){
+    google.maps.event.addListener(paths, 'set_at', () => {     
+                    
+        onPolyObjectChange(paths,oldPaths.join(),"set_at" ,attribute);
+    });
 
-        const oldcoordinates = oldPaths.join();
-
-        google.maps.event.addListener(paths, 'set_at', () => {     
-                       
-            onPolyObjectChange(paths,oldcoordinates,"set_at" ,attribute);
-        });
-
-        google.maps.event.addListener(paths, 'insert_at', () => {
-            onPolyObjectChange(paths,oldcoordinates,"insert_at", attribute);
-        });
-
-    }));
+    google.maps.event.addListener(paths, 'insert_at', () => {
+        onPolyObjectChange(paths,oldPaths.join(),"insert_at", attribute);
+    });
 }
 
 export function setCenterPolyobject(polyObject:any,mapBounds:google.maps.LatLngBounds,type:string,name:string) {
@@ -113,7 +107,7 @@ export function setCenterPolyobject(polyObject:any,mapBounds:google.maps.LatLngB
         //console.warn("polyobject center set to lat / lng: " + centerLatLng.lat() + ' / ' + centerLatLng.lng());
         
     } else if (polyObject && polyObject.paths && (isNaN(polyObject.paths[0].lat) || isNaN(polyObject.paths[0].lng))){
-        console.warn(logNode + type + ' ' + name + " has illegal latitude / longitude. This can happen when " + type + " still needs to be drawn.")
+        console.debug(logNode + type + ' ' + name + " has incorrect latitude / longitude. This can happen when " + type + " still needs to be drawn.")
     }
     return mapBounds;
 }

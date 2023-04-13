@@ -192,10 +192,19 @@ export class Map extends React.Component<GoogleMapsPropsExtended,MapState> {
             } 
         }
         if (noOfObjects == 1 && this.props.overruleFitBoundsZoom){
-            console.debug('overruling zoomlevel to: ' + this.props.lowestZoom);
+            console.debug(this.logNode + 'overruling zoomlevel to: ' + this.props.lowestZoom);
             map.setCenter(mapBounds.getCenter());
             map.setZoom(this.props.lowestZoom);
-        } else {
+        } 
+        // either no objects at all, or one object without coordinates, zoom to default lat/lng
+        else if (noOfObjects === 0 || (noOfObjects === 1 && 
+                ((this.props.polylines && this.props.polylines.length === 1 && this.props.polylines[0].isNew) || ((this.props.polygons && this.props.polygons.length === 1 && this.props.polygons[0].isNew)))))
+        {
+            console.debug(this.logNode  + 'no coordinates found for any of the objects, zooming to default lat lng..');
+            map.setCenter(this.state.center);
+            map.setZoom(this.props.lowestZoom);
+        }
+        else {
             map.fitBounds(mapBounds);
         }      
         // add map options once the google API is loaded    

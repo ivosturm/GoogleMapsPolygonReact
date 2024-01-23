@@ -160,7 +160,7 @@ export class Map extends React.Component<GoogleMapsPropsExtended,MapState> {
         } 
         // else trigger action call directly
         else if (mxObject && this.props.int_onClick){
-            this.props.int_onClick(mxObject).execute();
+            this.props.int_onClick.get(mxObject).execute();
         }
     }
     onInfoWindowClose = () =>
@@ -258,8 +258,7 @@ export class Map extends React.Component<GoogleMapsPropsExtended,MapState> {
                 position={this.state.infowindowObj.position} 
                 infoWindowWidget={this.props.infoWindowWidget}
                 mxObject = {this.state.infowindowObj.mxObject || {} as ObjectItem}          
-            >
-            </InfoWindowComponent>
+            />
             )} 
             {this.props.polygons?.map((polygon)=> (
                 (!polygon.isNew) ?

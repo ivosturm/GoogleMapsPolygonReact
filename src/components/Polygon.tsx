@@ -112,8 +112,7 @@ export default class PolygonComponent extends React.Component<PolygonProps,Polyg
                 editable={this.props.editable}
                 visible={this.props.visible}
                 onClick={this.props.onClick}
-            >
-            </Polygon>
+            />
         );
     }
   }

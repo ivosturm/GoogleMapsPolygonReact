@@ -8,6 +8,7 @@ import React, { createElement } from "react";
 export interface LoadScriptComponentInterface {
     apiKey: string;
     libraries: Libraries;
+    children: any;
 }
 
 interface LoadScriptComponentState {

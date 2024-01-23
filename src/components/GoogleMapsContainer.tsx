@@ -19,9 +19,9 @@ export interface GoogleMapsWidgetProps {
     draggableInEditMode: boolean;
     holeCoordinatesStringAttr?: ListAttributeValue<string>;
     reverseCoordinatesAttr?: ListAttributeValue<boolean>;
-    colorAttr: ListAttributeValue<string>;
-    strokeWeightAttr?: ListAttributeValue<BigJs.Big>;
-    opacityAttr?: ListAttributeValue<BigJs.Big>;
+    colorAttr?: ListAttributeValue<string>;
+    strokeWeightAttr?: ListAttributeValue<Big>;
+    opacityAttr?: ListAttributeValue<Big>;
     objectTypeAttr: ListAttributeValue<string>;
     lineTypeAttr?: ListAttributeValue<string>;
     defaultMapType: DefaultMapTypeEnum;
@@ -151,18 +151,21 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                 if (editable && this.props.draggableInEditMode){
                     draggable = true;
                 }
-                coordinatesString = String(this.props.coordinatesStringAttr(mxObject).value);
+                coordinatesString = String(this.props.coordinatesStringAttr.get(mxObject).value);
                 
                 if (!coordinatesString){
                     isNew = true;
                 }
-                this.props.reverseCoordinatesAttr ? reverse = Boolean(this.props.reverseCoordinatesAttr(mxObject).value) : false;  
-                strokeColor = String(this.props.colorAttr(mxObject).value);
-                this.props.opacityAttr ? strokeOpacity = Number(this.props.opacityAttr(mxObject).value) : 0; 
-                this.props.strokeWeightAttr ? strokeWeight = Number(this.props.strokeWeightAttr(mxObject).value) : 2;
+                this.props.reverseCoordinatesAttr ? reverse = Boolean(this.props.reverseCoordinatesAttr.get(mxObject).value) : false;  
+                if (this.props.colorAttr){
+                    strokeColor = String(this.props.colorAttr.get(mxObject).value);
+                }
+                
+                this.props.opacityAttr ? strokeOpacity = Number(this.props.opacityAttr.get(mxObject).value) : 0; 
+                this.props.strokeWeightAttr ? strokeWeight = Number(this.props.strokeWeightAttr.get(mxObject).value) : 2;
                 // transform the coordinates string to a path object
                 path = createPathFromString(coordinatesString,reverse,false);
-                type = String(this.props.objectTypeAttr(mxObject).value);
+                type = String(this.props.objectTypeAttr.get(mxObject).value);
                 let indexObj = -1;
 
                 if (type === 'Polygon'){
@@ -187,7 +190,7 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
 
                     let holePath;
                     if (this.props.holeCoordinatesStringAttr){
-                        holeCoordinatesString = String(this.props.holeCoordinatesStringAttr(mxObject).value);            
+                        holeCoordinatesString = String(this.props.holeCoordinatesStringAttr.get(mxObject).value);            
                         if (holeCoordinatesString){
                             // hole / inner bounds needs to be wound in opposite order of outer bounds
                             holePath = createPathFromString(holeCoordinatesString,reverse,true);               
@@ -212,7 +215,7 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                 } else if (type === 'Polyline'){
                     let lineType = "Normal";
                     if (this.props.lineTypeAttr){
-                        lineType = String(this.props.lineTypeAttr(mxObject).value);
+                        lineType = String(this.props.lineTypeAttr.get(mxObject).value);
                     }
                     let polylineObj = {
                         guid : mxObject.id,
@@ -278,8 +281,7 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                         opt_tilt={this.props.opt_tilt}
                         opt_zoomcontrol={this.props.opt_zoomcontrol}
                         styleArray={this.props.styleArray}
-                    >
-                    </Map>
+                    />
                 </LoadScriptComponent>
             </div>      
         ); 

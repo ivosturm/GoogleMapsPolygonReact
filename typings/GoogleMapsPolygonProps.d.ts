@@ -1,10 +1,11 @@
 /**
  * This file was generated from GoogleMapsPolygon.xml
  * WARNING: All changes made to this file will be overwritten
- * @author Mendix UI Content Team
+ * @author Mendix Widgets Framework Team
  */
-import { ComponentType, CSSProperties } from "react";
+import { ComponentType, CSSProperties, ReactNode } from "react";
 import { EditableValue, ListValue, ListActionValue, ListAttributeValue, ListWidgetValue } from "mendix";
+import { Big } from "big.js";
 
 export type DefaultMapTypeEnum = "ROADMAP" | "SATELLITE" | "HYBRID" | "TERRAIN";
 
@@ -14,7 +15,7 @@ export interface GoogleMapsPolygonContainerProps {
     name: string;
     class: string;
     style?: CSSProperties;
-    tabIndex: number;
+    tabIndex?: number;
     apiAccessKey: string;
     defaultLat: string;
     defaultLng: string;
@@ -22,14 +23,14 @@ export interface GoogleMapsPolygonContainerProps {
     draggableInEditMode: boolean;
     overruleFitBoundsZoom: boolean;
     lowestZoom: number;
-    polyObjects?: ListValue;
-    holeCoordinatesStringArray?: ListAttributeValue<string>;
+    polyObjects: ListValue;
+    holeCoordinatesStringArray: ListAttributeValue<string>;
     coordinatesStringAttr: ListAttributeValue<string>;
     coordinatesStringAttrUpdate?: EditableValue<string>;
     reverseCoordinatesAttr?: ListAttributeValue<boolean>;
     colorAttr: ListAttributeValue<string>;
-    strokeWeightAttr?: ListAttributeValue<BigJs.Big>;
-    opacityAttr?: ListAttributeValue<BigJs.Big>;
+    strokeWeightAttr?: ListAttributeValue<Big>;
+    opacityAttr?: ListAttributeValue<Big>;
     objectTypeAttr: ListAttributeValue<string>;
     lineTypeAttr?: ListAttributeValue<string>;
     infoWindowWidget?: ListWidgetValue;
@@ -45,8 +46,14 @@ export interface GoogleMapsPolygonContainerProps {
 }
 
 export interface GoogleMapsPolygonPreviewProps {
+    /**
+     * @deprecated Deprecated since version 9.18.0. Please use class property instead.
+     */
+    className: string;
     class: string;
     style: string;
+    styleObject?: CSSProperties;
+    readOnly: boolean;
     apiAccessKey: string;
     defaultLat: string;
     defaultLng: string;
@@ -54,7 +61,7 @@ export interface GoogleMapsPolygonPreviewProps {
     draggableInEditMode: boolean;
     overruleFitBoundsZoom: boolean;
     lowestZoom: number | null;
-    polyObjects: {} | null;
+    polyObjects: {} | { caption: string } | { type: string } | null;
     holeCoordinatesStringArray: string;
     coordinatesStringAttr: string;
     coordinatesStringAttrUpdate: string;
@@ -64,7 +71,7 @@ export interface GoogleMapsPolygonPreviewProps {
     opacityAttr: string;
     objectTypeAttr: string;
     lineTypeAttr: string;
-    infoWindowWidget: { widgetCount: number; renderer: ComponentType };
+    infoWindowWidget: { widgetCount: number; renderer: ComponentType<{ children: ReactNode; caption?: string }> };
     disableInfoWindow: boolean;
     onClick: {} | null;
     opt_drag: boolean;

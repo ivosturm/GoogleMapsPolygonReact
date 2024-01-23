@@ -103,8 +103,7 @@ export default class PolylineComponent extends React.Component<PolylineProps,Pol
                 editable={this.props.editable}
                 visible={this.props.visible}
                 onClick={this.props.onClick}
-            >
-            </Polyline>
+            />
         );
     }
   }

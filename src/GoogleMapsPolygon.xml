@@ -54,11 +54,11 @@
 			</propertyGroup>
 		</propertyGroup>
 		<propertyGroup caption="Data Source">
-			<property key="polyObjects" type="datasource" isList="true" required="false">
+			<property key="polyObjects" type="datasource" isList="true" required="true">
 				<caption>Data source</caption>
 				<description/>
 			</property>
-			<property key="holeCoordinatesStringArray" type="attribute" required="false" dataSource="polyObjects">
+			<property key="holeCoordinatesStringArray" type="attribute" required="true" dataSource="polyObjects">
 				<caption>Hole Coordinates</caption>
 				<description>Select the attribute that holds the coordinates of the Polygon</description>
 				<attributeTypes>

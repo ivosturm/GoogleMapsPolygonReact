@@ -16,6 +16,8 @@ export interface GoogleMapsPolygonContainerProps {
     class: string;
     style?: CSSProperties;
     tabIndex?: number;
+    mapHeight: number;
+    mapWidth: number;
     apiAccessKey: string;
     defaultLat: string;
     defaultLng: string;
@@ -54,6 +56,8 @@ export interface GoogleMapsPolygonPreviewProps {
     style: string;
     styleObject?: CSSProperties;
     readOnly: boolean;
+    mapHeight: number | null;
+    mapWidth: number | null;
     apiAccessKey: string;
     defaultLat: string;
     defaultLng: string;

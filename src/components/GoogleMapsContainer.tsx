@@ -11,8 +11,16 @@ import { Map } from "./Map";
 import { LoadScriptComponent } from "./LoadScriptComponent";
 
 type DataSource = "static" | "context" | "XPath" | "microflow";
+const containerStyle = {
+    width: "800px",
+    height: "600px"
+};
+
+const libraries  = "drawing";
 
 export interface GoogleMapsWidgetProps {
+    mapWidth: number;
+    mapHeight: number;
     polyObjects?: ListValue;
     coordinatesStringAttr: ListAttributeValue<string>;
     coordinatesStringAttrUpdate?: EditableValue<string>;
@@ -107,13 +115,17 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
         }           
     }
     render() { 
-
-        const libraries  = "drawing";
-
-        const containerStyle = {
-            width: '800px',
-            height: '600px'
-        };
+        // Initialize map dimensions
+        if (this.props.mapWidth === 10000) {
+            containerStyle.width = "100%";
+        } else {
+            containerStyle.width = this.props.mapWidth + "px";
+        }
+        if (this.props.mapHeight === 10000) {
+            containerStyle.height = "100vh";
+        } else {
+            containerStyle.height = this.props.mapHeight + "px";
+        }
         const datasource = this.props.polyObjects;
         if (!datasource || datasource.status !== ValueStatus.Available || !datasource.items) {
             return null;
@@ -257,7 +269,7 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
         }
 
         return (
-            <div style={{ height: '90vh', width: '90%' }}>
+            <div style={{ height: containerStyle.height, width: containerStyle.width }} className={"googlemaps-polygon"}>
                 <LoadScriptComponent
                     apiKey={this.props.apiKey}
                     libraries={[libraries]}
@@ -270,6 +282,7 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                         coordinatesStringAttrUpdate={this.props.coordinatesStringAttrUpdate}
                         polygons={this.props.polygons}
                         polylines={this.props.polylines}
+                        int_onClick={this.props.int_onClick}
                         int_disableInfoWindow={this.props.disableInfoWindow}
                         infoWindowWidget={this.props.infoWindowWidget}
                         overruleFitBoundsZoom={this.props.overruleFitBoundsZoom}

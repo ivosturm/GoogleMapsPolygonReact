@@ -145,9 +145,12 @@ export class Map extends React.Component<GoogleMapsPropsExtended,MapState> {
         const coordinates = (polyline.getPath().getArray().toString());
         updateCoordinatesAttribute(coordinates,this.props.coordinatesStringAttrUpdate);
     }
-    mvcObjectClickHandler(event:any, name: string, center?: PositionProps,mxObject?: ObjectItem){       
+    mvcObjectClickHandler(event:any, name: string, center?: PositionProps,mxObject?: ObjectItem){  
+        const messagePrefix = this.logNode + name + " with guid " + mxObject?.id + " clicked! triggering ";
+   
         // trigger infowindow functionality if enabled in interaction settings
         if (!this.props.int_disableInfoWindow && event && center){
+            console.debug(messagePrefix + "infowindow!");  
             this.setState({
                 showingInfoWindow : true,
                 infowindowObj : {
@@ -159,8 +162,11 @@ export class Map extends React.Component<GoogleMapsPropsExtended,MapState> {
             })
         } 
         // else trigger action call directly
-        else if (mxObject && this.props.int_onClick){
+        else if (this.props.int_disableInfoWindow && mxObject && this.props.int_onClick){
+            console.debug(messagePrefix + "on click action!");  
             this.props.int_onClick.get(mxObject).execute();
+        } else {
+            console.error(messagePrefix + "nothing! Is the widget correctly configured?")
         }
     }
     onInfoWindowClose = () =>

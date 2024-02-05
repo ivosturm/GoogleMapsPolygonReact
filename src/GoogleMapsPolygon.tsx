@@ -10,6 +10,8 @@ export default class GoogleMapsPolygon extends Component<GoogleMapsPolygonContai
     render(): ReactNode {
         return <GoogleMapsContainer 
             dataSource = {"XPath"}
+            mapHeight={this.props.mapHeight}
+            mapWidth={this.props.mapWidth}
             polyObjects = {this.props.polyObjects}
             defaultMapType = {this.props.defaultMapType}
             coordinatesStringAttr = {this.props.coordinatesStringAttr}

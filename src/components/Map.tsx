@@ -23,8 +23,8 @@ interface GoogleMapsPropsExtended {
         width: string;
         height: string;
     }
-    defaultLat: string;
-    defaultLng: string;
+    defaultLat: number;
+    defaultLng: number;
     lowestZoom: number;
     onLoad?: (map: google.maps.Map) => void | Promise<void>;
     coordinatesStringAttrUpdate?: EditableValue<string>;
@@ -67,8 +67,8 @@ export class Map extends React.Component<GoogleMapsPropsExtended,MapState> {
             // this is where the center of map is going to be
             isLoaded: false,
             center : {
-                lat: Number(this.props.defaultLat), 
-                lng: Number(this.props.defaultLng)
+                lat: this.props.defaultLat, 
+                lng: this.props.defaultLng
             },
             bounds: {} as google.maps.LatLngBounds,
             // this is how much you want to zoom in

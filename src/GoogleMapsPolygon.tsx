@@ -36,6 +36,10 @@ export default class GoogleMapsPolygon extends Component<GoogleMapsPolygonContai
             apiKey={this.props.apiAccessKey} 
             defaultLat = {this.props.defaultLat}    
             defaultLng = {this.props.defaultLng}
+            dynamicDefaultLocation = {this.props.dynamicDefaultLocation}
+            defaultLocation = {this.props.defaultLocation}
+            defaultLatAttr = {this.props.defaultLatAttr}
+            defaultLngAttr = {this.props.defaultLngAttr}
             overruleFitBoundsZoom = {this.props.overruleFitBoundsZoom}
             lowestZoom = {this.props.lowestZoom}
             locations={[]}

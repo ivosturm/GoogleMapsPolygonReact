@@ -36,6 +36,10 @@ export interface GoogleMapsWidgetProps {
     apiKey: string;
     defaultLat: string;
     defaultLng: string;
+    dynamicDefaultLocation: boolean;
+    defaultLocation?: ListValue;
+    defaultLatAttr?: ListAttributeValue<Big | string>;
+    defaultLngAttr?: ListAttributeValue<Big | string>;
     dataSource: DataSource;
     disableInfoWindow: boolean;
     int_onClick?: ListActionValue;
@@ -129,6 +133,28 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
         const datasource = this.props.polyObjects;
         if (!datasource || datasource.status !== ValueStatus.Available || !datasource.items) {
             return null;
+        }
+
+        // set default location based on static values
+        let defaultLat = Number(this.props.defaultLat),
+        defaultLng = Number(this.props.defaultLng);
+
+        // and if dynamic default location is configured, overrule static value
+        if (this.props.dynamicDefaultLocation){
+            const defaultLocationDataSource = this.props.defaultLocation;
+            if (!defaultLocationDataSource || defaultLocationDataSource.status !== ValueStatus.Available || !defaultLocationDataSource.items) {
+                return null;
+            } else {
+                defaultLocationDataSource.items.map(defaultLocationMxObject => {
+                    if (this.props.defaultLatAttr && this.props.defaultLngAttr){
+                        const lat = Number(this.props.defaultLatAttr.get(defaultLocationMxObject).value),
+                        lng = Number(this.props.defaultLngAttr.get(defaultLocationMxObject).value);
+                        console.debug(this.logNode + "dynamic default location loaded with lat: " + lat + " / lng:  " + lng);
+                        defaultLat = lat;
+                        defaultLng = lng;
+                    }
+                })
+            }
         }
 
         let coordinatesString : string = "",
@@ -276,8 +302,8 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                 >
                     <Map
                         mapContainerStyle={containerStyle}
-                        defaultLat={this.props.defaultLat}
-                        defaultLng={this.props.defaultLng}
+                        defaultLat={defaultLat}
+                        defaultLng={defaultLng}
                         lowestZoom={this.props.lowestZoom}
                         coordinatesStringAttrUpdate={this.props.coordinatesStringAttrUpdate}
                         polygons={this.props.polygons}

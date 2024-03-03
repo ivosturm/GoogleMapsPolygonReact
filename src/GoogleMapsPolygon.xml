@@ -23,14 +23,6 @@
 					<caption>Maps API Access Key</caption>
 					<description>For using in Production, a Google Maps API key will be needed. For development purposes it can be left empty, but will generate text overlays 'For development purposes only' by Google</description>
 				</property> 
-				<property key="defaultLat" type="string" defaultValue="0.0">
-					<caption>Default Latitude</caption>
-					<description>Default latitude for the map to start at.</description> 
-				</property>
-				<property key="defaultLng" type="string" defaultValue="0.0">
-					<caption>Default Longitude</caption>
-					<description>Default longitude for the map to start at.</description> 
-				</property>
 				<property key="defaultMapType" type="enumeration" defaultValue="ROADMAP">
 					<caption>Map Type</caption>
 					<description>Set the default map type</description>
@@ -40,6 +32,40 @@
 						<enumerationValue key="HYBRID">Hybrid</enumerationValue>
 						<enumerationValue key="TERRAIN">Terrain</enumerationValue>
 					</enumerationValues>
+				</property>
+			</propertyGroup>
+			<propertyGroup caption="Default location">
+				<property key="defaultLat" type="string" defaultValue="0.0">
+					<caption>Default Latitude</caption>
+					<description>Default latitude for the map to start at.</description> 
+				</property>
+				<property key="defaultLng" type="string" defaultValue="0.0">
+					<caption>Default Longitude</caption>
+					<description>Default longitude for the map to start at.</description> 
+				</property>
+				<property key="dynamicDefaultLocation" type="boolean" defaultValue="false">
+						<caption>Dynamic Default Location</caption>
+					<description>If enabled, the default location will be retrieved via below configured 'Default Location' data source.</description> 
+				</property>
+				<property key="defaultLocation" type="datasource" isList="true" required="false">
+					<caption>Dynamic Default Location</caption>
+					<description/>
+				</property>
+				<property key="defaultLatAttr" type="attribute" required="false" dataSource="defaultLocation">
+					<caption>Latitude attribute</caption>
+					<description>The latitude attribute.</description>
+					<attributeTypes>
+						<attributeType name="Decimal"/>
+						<attributeType name="String"/>
+					</attributeTypes>
+				</property>
+				<property key="defaultLngAttr" type="attribute" required="false" dataSource="defaultLocation">
+					<caption>Longtitude attribute</caption>
+					<description>The longtitude attribute.</description>
+					<attributeTypes>
+						<attributeType name="Decimal"/>
+						<attributeType name="String"/>
+					</attributeTypes>
 				</property>
 			</propertyGroup>
 			<propertyGroup caption="Configuration">

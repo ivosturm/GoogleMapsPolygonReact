@@ -290,14 +290,14 @@ export default class GoogleMapsContainer extends Component<GoogleMapsContainerPr
                     }
                     this.props.polylines.push(polylineObj);
                 }
-
             })
         }
 
         return (
             <div style={{ height: containerStyle.height, width: containerStyle.width }} className={"googlemaps-polygon"}>
                 <LoadScriptComponent
-                    apiKey={this.props.apiKey}
+                    // 5-5-2024 Added async part. See: https://github.com/JustFly1984/react-google-maps-api/issues/3334 
+                    apiKey={this.props.apiKey + "&loading=async"}
                     libraries={[libraries]}
                 >
                     <Map

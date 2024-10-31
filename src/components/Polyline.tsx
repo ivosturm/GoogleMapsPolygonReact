@@ -1,112 +1,153 @@
-import { Polyline } from "@react-google-maps/api";
-import React, { createElement } from "react";
-import { addPolyEvent } from "./PathUtils";
-import { PolyProps } from "./Polygon";
+/* eslint-disable complexity */
+import {
+  forwardRef,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useCallback,
+  useMemo
+} from 'react';
 
-export interface PolylineProps extends PolyProps {
-    style: {
-        strokeColor : string;
-        strokeOpacity : number;
-        strokeWeight : number;
-        icons?:IconsProps[];
-    }; 
-    lineType: string;  
-}
+import { GoogleMapsContext, useMapsLibrary } from '@vis.gl/react-google-maps';
+
+import type { Ref } from 'react';
+import { PolyProps } from './Polygon';
+
+type PolylineEventProps = {
+  onClick?: (e: google.maps.MapMouseEvent) => void;
+  onDrag?: (e: google.maps.MapMouseEvent) => void;
+  onDragStart?: (e: google.maps.MapMouseEvent) => void;
+  onDragEnd?: (e: google.maps.MapMouseEvent) => void;
+  onMouseOver?: (e: google.maps.MapMouseEvent) => void;
+  onMouseOut?: (e: google.maps.MapMouseEvent) => void;
+  onPolylineChange?: (path: google.maps.MVCArray<google.maps.LatLng>) => void;
+};
 
 export interface IconsProps {
-    icon: IconProps,
-    offset: string,
-    repeat: string
+  icon: IconProps;
+  offset: string;
+  repeat: string;
 }
 
 export interface IconProps {
- 
-    path: string | google.maps.SymbolPath,
-    fillOpacity?: number,
-    strokeOpacity?: number,
-    scale: number,
-    strokeWeight: number
-
+  path: string | google.maps.SymbolPath;
+  fillOpacity?: number;
+  strokeOpacity?: number;
+  scale: number;
+  strokeWeight: number;
 }
 
-export interface PolylineState {
-    polyline: google.maps.Polyline;
-    center: google.maps.LatLng;
+export interface PolylineCustomProps extends PolyProps {
+  icons?: IconsProps[];
+  encodedPath?: string;
 }
 
-export default class PolylineComponent extends React.Component<PolylineProps,PolylineState> {
-    logNode: string;
-    constructor(props: PolylineProps) {
-        super(props);
-        this.logNode = "Google Maps Polygon (React) widget: Polyline Component: ";
-        this.state = {
-            polyline: {} as google.maps.Polyline,
-            center: {} as google.maps.LatLng
-        };
-    }
-  
-    onClick = (e:any) => {
-        if (e){
+export type PolylineProps = google.maps.PolylineOptions &
+  PolylineEventProps &
+  PolylineCustomProps;
 
-        }
+export type PolylineRef = Ref<google.maps.Polyline | null>;
+
+function usePolyline(props: PolylineProps) {
+  const {
+    onClick,
+    onDrag,
+    onDragStart,
+    onDragEnd,
+    onMouseOver,
+    onMouseOut,
+    onPolylineChange,
+    encodedPath,
+    ...polylineOptions
+  } = props;
+
+  const callbacks = useRef({
+    onClick,
+    onDrag,
+    onDragStart,
+    onDragEnd,
+    onMouseOver,
+    onMouseOut,
+    onPolylineChange
+  });
+
+  const geometryLibrary = useMapsLibrary('geometry');
+  const logNode = "Google Maps Polygon (React) widget: Polyline: ";
+
+  const polyline = useRef(new google.maps.Polyline()).current;
+  const listenersRef = useRef<google.maps.MapsEventListener[]>([]);
+
+  useMemo(() => {
+    polyline.setOptions(polylineOptions);
+  }, [polyline, polylineOptions]);
+
+  const map = useContext(GoogleMapsContext)?.map;
+
+  useMemo(() => {
+    if (!encodedPath || !geometryLibrary) return;
+    const path = geometryLibrary.encoding.decodePath(encodedPath);
+    polyline.setPath(path);
+  }, [polyline, encodedPath, geometryLibrary]);
+
+  useEffect(() => {
+    if (!map) {
+      if (map === undefined)
+        console.error(logNode + '<Polyline> has to be inside a Map component.');
+      return;
+    }
+
+    polyline.setMap(map);
+
+    return () => {
+      polyline.setMap(null);
     };
-    onInfoWindowLoad = () => {
-        console.debug(this.logNode + 'infoWindow: ');
-    }
-    onInfoWindowClose = () => {
+  }, [map]);
 
+  const addEventListeners = useCallback(() => {
+    const gme = google.maps.event;
+    [
+      ['click', 'onClick'],
+      ['drag', 'onDrag'],
+      ['dragstart', 'onDragStart'],
+      ['dragend', 'onDragEnd'],
+      ['mouseover', 'onMouseOver'],
+      ['mouseout', 'onMouseOut']
+    ].forEach(([eventName, eventCallback]) => {
+      listenersRef.current.push(gme.addListener(polyline, eventName, (e: google.maps.MapMouseEvent) => {
+        const callback = callbacks.current[eventCallback as keyof typeof callbacks.current] as ((e: google.maps.MapMouseEvent) => void) | undefined;
+        if (callback) callback(e as google.maps.MapMouseEvent);
+      }))
+    });
+
+    if (props.editable && props.coordinatesStringAttrUpdate && onPolylineChange) {
+      const path = polyline.getPath();
+      listenersRef.current.push(gme.addListener(path, 'insert_at', () => { onPolylineChange(path) }))
+      listenersRef.current.push(gme.addListener(path, 'set_at', () => { onPolylineChange(path) }))
+      listenersRef.current.push(gme.addListener(path, 'remove_at', () => { onPolylineChange(path) }))
+    }
+  }, [polyline]);
+
+  useEffect(() => {
+    if (!polyline) return;
+
+    addEventListeners();
+
+    return () => {
+      listenersRef.current.forEach(listener => listener.remove());
     };
-    onLoad = (polyline: google.maps.Polyline) => {  
+  }, [polyline, polylineOptions]);
 
-        const polylineBounds = new google.maps.LatLngBounds();
-        const newPaths = polyline.getPath();
+  return polyline;
+}
 
-        newPaths.forEach(function(element){polylineBounds.extend(element)})
+/**
+ * Component to render a polyline on a map
+ */
+export const Polyline = forwardRef((props: PolylineProps, ref: PolylineRef) => {
+  const polyline = usePolyline(props);
 
-        // store center of polyline in polyline state
-        let center = polylineBounds.getCenter();
+  useImperativeHandle(ref, () => polyline, []);
 
-        this.setState({
-            polyline : polyline,
-            center: center
-        });
-
-        //Add a dynamic listener to the polygon or polygon click event for the NewEdit screen
-        if (this.props.editable && this.props.coordinatesStringAttrUpdate) {
-            addPolyEvent(newPaths,this.props.paths,this.props.coordinatesStringAttrUpdate);
-        }
-    };
-    shouldComponentUpdate(nextProps:any) {
-        if (nextProps.name == this.props.name && nextProps.center == this.props.center && nextProps.paths == this.props.paths){
-            console.debug(this.logNode + 'polyline ' + this.props.name + ' NOT updated, since name, center and path havent changed!');
-            return false;
-        } else if (nextProps.name !== this.props.name){
-            console.debug(this.logNode + 'polyline ' + this.props.name + ' updated! New name: ' + nextProps.name);
-            return false;
-        } else if (nextProps.center != this.props.center){
-            console.debug(this.logNode + 'polyline ' + this.props.name + ' updated! New center: ' + nextProps.center);
-            return false;
-        } else if (nextProps.paths !== this.props.paths){
-            console.debug(this.logNode + 'polyline ' + this.props.name + ' updated! New path: ' + nextProps.paths);
-            return true;
-        } else {
-            return true;
-        }
-    }
-    render() {  
-
-        return (
-            <Polyline
-                onLoad={this.onLoad}
-                path={this.props.paths}
-                options={this.props.style}
-                editable={this.props.editable}
-                visible={this.props.visible}
-                onClick={this.props.onClick}
-            />
-        );
-    }
-  }
-
-
-
+  return null;
+});

@@ -1,4 +1,4 @@
-import {Component, createElement}  from "react";
+import {createElement, useEffect}  from "react";
 
 import {ObjectItem,EditableValue,ListValue, ListActionValue, ListAttributeValue,ValueStatus, ListWidgetValue} from "mendix";
 
@@ -6,9 +6,9 @@ import  { PolygonProps } from "./Polygon";
 import { DefaultMapTypeEnum } from "typings/GoogleMapsPolygonProps";
 import { createPathFromString, isAttributeEditable, PathArrayProps, setLineStyleOptions } from "./PathUtils";
 import { PolylineProps } from "./Polyline";
-import { Map } from "./Map";
+import CustomMap from "./Map";
 
-import { LoadScriptComponent } from "./LoadScriptComponent";
+import { APIProvider } from '@vis.gl/react-google-maps';
 
 type DataSource = "static" | "context" | "XPath" | "microflow";
 const containerStyle = {
@@ -68,262 +68,216 @@ interface GoogleMapsContainerProps extends GoogleMapsWidgetProps {
 }
 
 
-export default class GoogleMapsContainer extends Component<GoogleMapsContainerProps,GoogleMapsContainerState> {
-    mxObjects: ObjectItem[];
-    logNode: string;
-    constructor(props: GoogleMapsContainerProps) {
-        super(props);
-        this.state = {
-            map: {} as google.maps.Map,
-            isLoaded: false,
-            editable: false
-        }; 
-        this.logNode = "Google Maps Polygon (React) widget: ";
+export const GoogleMapsContainer: React.FC<GoogleMapsContainerProps> = (props) => {
 
+    const logNode = "Google Maps Polygon (React) widget: ";
+    let mxObjects: ObjectItem[] = [];
+    
+    useEffect(() => {
+        console.debug(logNode + 'componentDidMount:', props);
+    }, []);
+    // Initialize map dimensions
+    if (props.mapWidth === 10000) {
+        containerStyle.width = "100%";
+    } else {
+        containerStyle.width = props.mapWidth + "px";
     }
-    componentDidMount () {
-        console.debug(this.logNode + 'componentDidMount:', this.props);        
+    if (props.mapHeight === 10000) {
+        containerStyle.height = "100vh";
+    } else {
+        containerStyle.height = props.mapHeight + "px";
     }
-    shouldComponentUpdate(nextProps:GoogleMapsContainerProps,nextState:GoogleMapsContainerState) {
-        // no changes, no reload!G
-        if (nextState == this.state && nextProps == this.props){
-            console.debug(this.logNode + 'state nor props changed!');
-            return false;
-        } // props changes, reload! 
-        else if (nextState == this.state && nextProps != this.props){
-            if (this.props.polyObjects?.status == 'loading' && nextProps.polyObjects?.status == 'available'){
-                console.debug(this.logNode + 'props changed, Mendix objects available!');
-                return true;
-            } else if (this.props.coordinatesStringAttrUpdate != nextProps.coordinatesStringAttrUpdate || this.props.coordinatesStringAttr != nextProps.coordinatesStringAttr ){
-                console.debug(this.logNode + 'props changed, object coordinates updated via drawing!');
-                return false;
-            } else {
-                console.debug(this.logNode + 'props changed');
-                return true;
-            }         
-        } // state changed, don't reload if only map was added to state! 
-        else if (nextState != this.state && nextProps == this.props){
-            if (!this.state.isLoaded && nextState.isLoaded){
-                console.debug(this.logNode + 'state isLoaded changed!');
-                return false;
-            } else {
-                console.debug('state changed!');
-                return true;
-            }           
-        } else if (nextState != this.state && nextProps != this.props){
-            console.debug(this.logNode + 'state and props changed!');
-            return true;
-        } // shouldn't occur
-        else {
-            return false;
-        }           
+    const datasource = props.polyObjects;
+    if (!datasource || datasource.status !== ValueStatus.Available || !datasource.items) {
+        return null;
     }
-    render() { 
-        // Initialize map dimensions
-        if (this.props.mapWidth === 10000) {
-            containerStyle.width = "100%";
-        } else {
-            containerStyle.width = this.props.mapWidth + "px";
-        }
-        if (this.props.mapHeight === 10000) {
-            containerStyle.height = "100vh";
-        } else {
-            containerStyle.height = this.props.mapHeight + "px";
-        }
-        const datasource = this.props.polyObjects;
-        if (!datasource || datasource.status !== ValueStatus.Available || !datasource.items) {
+
+    // set default location based on static values
+    let defaultLat = Number(props.defaultLat),
+    defaultLng = Number(props.defaultLng);
+
+    // and if dynamic default location is configured, overrule static value
+    if (props.dynamicDefaultLocation){
+        const defaultLocationDataSource = props.defaultLocation;
+        if (!defaultLocationDataSource || defaultLocationDataSource.status !== ValueStatus.Available || !defaultLocationDataSource.items) {
             return null;
-        }
-
-        // set default location based on static values
-        let defaultLat = Number(this.props.defaultLat),
-        defaultLng = Number(this.props.defaultLng);
-
-        // and if dynamic default location is configured, overrule static value
-        if (this.props.dynamicDefaultLocation){
-            const defaultLocationDataSource = this.props.defaultLocation;
-            if (!defaultLocationDataSource || defaultLocationDataSource.status !== ValueStatus.Available || !defaultLocationDataSource.items) {
-                return null;
-            } else {
-                defaultLocationDataSource.items.map(defaultLocationMxObject => {
-                    if (this.props.defaultLatAttr && this.props.defaultLngAttr){
-                        const lat = Number(this.props.defaultLatAttr.get(defaultLocationMxObject).value),
-                        lng = Number(this.props.defaultLngAttr.get(defaultLocationMxObject).value);
-                        console.debug(this.logNode + "dynamic default location loaded with lat: " + lat + " / lng:  " + lng);
-                        defaultLat = lat;
-                        defaultLng = lng;
-                    }
-                })
-            }
-        }
-
-        let coordinatesString : string = "",
-        holeCoordinatesString : string = "",
-        reverse : boolean = false,
-        draggable: boolean = false,
-        isNew : boolean = false,
-        strokeColor : string = "",
-        strokeOpacity : number = 1,
-        strokeWeight : number = 1,
-        name : string = '',
-        type : string = 'Polygon',
-        path : PathArrayProps;
-
-        // create polygons / polylines 
-        // showing of infowindow is handled via state, if shown, don't recreate already existing objects
-        if (datasource && datasource.items){
-            let editable = false;
-            if (this.props.coordinatesStringAttrUpdate){
-                if (isAttributeEditable("coordinatesStringAttrUpdate",this.props.coordinatesStringAttrUpdate)){
-                    editable = true;
-                }
-            }      
-            this.mxObjects = datasource.items;
-            this.mxObjects.map(mxObject => {
-                // get all generic attribute values relevant for both Polygon and Polyline
-                // due to bug in Mendix Pluggable Widget API, readOnly field is always true for datasource objects, hence use attribute
-                /*
-                draggable = /*!this.props.coordinatesStringAttr(mxObject).readOnly;
-                editable = !this.props.coordinatesStringAttr(mxObject).readOnly;
-                */
-                if (editable && this.props.draggableInEditMode){
-                    draggable = true;
-                }
-                coordinatesString = String(this.props.coordinatesStringAttr.get(mxObject).value);
-                
-                if (!coordinatesString){
-                    isNew = true;
-                }
-                this.props.reverseCoordinatesAttr ? reverse = Boolean(this.props.reverseCoordinatesAttr.get(mxObject).value) : false;  
-                if (this.props.colorAttr){
-                    strokeColor = String(this.props.colorAttr.get(mxObject).value);
-                }
-                
-                this.props.opacityAttr ? strokeOpacity = Number(this.props.opacityAttr.get(mxObject).value) : 0; 
-                this.props.strokeWeightAttr ? strokeWeight = Number(this.props.strokeWeightAttr.get(mxObject).value) : 2;
-                // transform the coordinates string to a path object
-                path = createPathFromString(coordinatesString,reverse,false);
-                type = String(this.props.objectTypeAttr.get(mxObject).value);
-                let indexObj = -1;
-
-                if (type === 'Polygon'){
-                    
-                    let polygonObj = {
-                        guid : mxObject.id,
-                        isNew: isNew,
-                        name : name,
-                        mxObject : mxObject,
-                        paths : path.paths, 
-                        visible : true,
-                        draggable : draggable,
-                        editable : editable,
-                        style : {
-                            strokeColor : strokeColor,
-                            strokeOpacity : strokeOpacity,
-                            strokeWeight : strokeWeight,
-                            fillColor : strokeColor,
-                            fillOpacity : strokeOpacity
-                        }
-                    } as PolygonProps;
-
-                    let holePath;
-                    if (this.props.holeCoordinatesStringAttr){
-                        holeCoordinatesString = String(this.props.holeCoordinatesStringAttr.get(mxObject).value);            
-                        if (holeCoordinatesString){
-                            // hole / inner bounds needs to be wound in opposite order of outer bounds
-                            holePath = createPathFromString(holeCoordinatesString,reverse,true);               
-                        }
-                    }
-                    if (holePath){
-                        polygonObj.holes = holePath.paths;
-                    }
-                    indexObj = -1;
-                    this.props.polygons.filter(function(polygon,index){
-                        if (polygon.guid == polygonObj.guid){
-                            indexObj = index;
-                            return;
-                        }
-                    });
-                    // object exists -> remove old by index and add new
-                    if (indexObj > -1) {
-                        this.props.polygons.splice(indexObj,1);  
-                    }
-                    this.props.polygons.push(polygonObj);
-                    
-                } else if (type === 'Polyline'){
-                    let lineType = "Normal";
-                    if (this.props.lineTypeAttr){
-                        lineType = String(this.props.lineTypeAttr.get(mxObject).value);
-                    }
-                    let polylineObj = {
-                        guid : mxObject.id,
-                        isNew: isNew,
-                        name : name,
-                        mxObject : mxObject,
-                        paths : path.paths, 
-                        lineType : lineType,
-                        visible : true,
-                        draggable : draggable,
-                        editable : editable,
-                        style : {
-                            strokeColor : strokeColor,
-                            strokeOpacity : strokeOpacity,
-                            strokeWeight : strokeWeight
-                        }
-                    } as PolylineProps;
-
-                    if (lineType === "Dotted" || lineType === "Dashed") {
-                        // set the stying options correctly for a dotted / dashed line
-                        setLineStyleOptions(lineType, polylineObj);
-                    }
-                    // reset index as it could have been updated from other object
-                    indexObj = -1;
-                    this.props.polylines.filter(function(polyline,index){
-                        if (polyline.guid == polylineObj.guid){
-                            indexObj = index;
-                            return;
-                        }
-                    });
-                    // object exists -> remove old by index and add new
-                    if (indexObj > -1) {
-                        this.props.polylines.splice(indexObj,1);  
-                    }
-                    this.props.polylines.push(polylineObj);
+        } else {
+            defaultLocationDataSource.items.map(defaultLocationMxObject => {
+                if (props.defaultLatAttr && props.defaultLngAttr){
+                    const lat = Number(props.defaultLatAttr.get(defaultLocationMxObject).value),
+                    lng = Number(props.defaultLngAttr.get(defaultLocationMxObject).value);
+                    console.debug(logNode + "dynamic default location loaded with lat: " + lat + " / lng:  " + lng);
+                    defaultLat = lat;
+                    defaultLng = lng;
                 }
             })
         }
-
-        return (
-            <div style={{ height: containerStyle.height, width: containerStyle.width }} className={"googlemaps-polygon"}>
-                <LoadScriptComponent
-                    // 5-5-2024 Added async part. See: https://github.com/JustFly1984/react-google-maps-api/issues/3334 
-                    apiKey={this.props.apiKey + "&loading=async"}
-                    libraries={[libraries]}
-                >
-                    <Map
-                        mapContainerStyle={containerStyle}
-                        defaultLat={defaultLat}
-                        defaultLng={defaultLng}
-                        lowestZoom={this.props.lowestZoom}
-                        coordinatesStringAttrUpdate={this.props.coordinatesStringAttrUpdate}
-                        polygons={this.props.polygons}
-                        polylines={this.props.polylines}
-                        int_onClick={this.props.int_onClick}
-                        int_disableInfoWindow={this.props.disableInfoWindow}
-                        infoWindowWidget={this.props.infoWindowWidget}
-                        overruleFitBoundsZoom={this.props.overruleFitBoundsZoom}
-                        defaultMapType={this.props.defaultMapType}
-                        opt_drag={this.props.opt_drag}
-                        opt_mapcontrol={this.props.opt_mapcontrol}
-                        opt_scroll={this.props.opt_scroll}
-                        opt_streetview={this.props.opt_streetview}
-                        opt_tilt={this.props.opt_tilt}
-                        opt_zoomcontrol={this.props.opt_zoomcontrol}
-                        styleArray={this.props.styleArray}
-                    />
-                </LoadScriptComponent>
-            </div>      
-        ); 
     }
+
+    let coordinatesString : string = "",
+    holeCoordinatesString : string = "",
+    reverse : boolean = false,
+    draggable: boolean = false,
+    isNew : boolean = false,
+    strokeColor : string = "",
+    strokeOpacity : number = 1,
+    strokeWeight : number = 1,
+    name : string = '',
+    type : string = 'Polygon',
+    path : PathArrayProps;
+
+    // create polygons / polylines 
+    // showing of infowindow is handled via state, if shown, don't recreate already existing objects
+    if (datasource && datasource.items){
+        let editable = false;
+        if (props.coordinatesStringAttrUpdate){
+            if (isAttributeEditable("coordinatesStringAttrUpdate",props.coordinatesStringAttrUpdate)){
+                editable = true;
+            }
+        }      
+        mxObjects = datasource.items;
+        mxObjects.map(mxObject => {
+            // get all generic attribute values relevant for both Polygon and Polyline
+            // due to bug in Mendix Pluggable Widget API, readOnly field is always true for datasource objects, hence use attribute
+            /*
+            draggable = /*!props.coordinatesStringAttr(mxObject).readOnly;
+            editable = !props.coordinatesStringAttr(mxObject).readOnly;
+            */
+            if (editable && props.draggableInEditMode){
+                draggable = true;
+            }
+            coordinatesString = String(props.coordinatesStringAttr.get(mxObject).value);
+            
+            if (!coordinatesString){
+                isNew = true;
+            }
+            props.reverseCoordinatesAttr ? reverse = Boolean(props.reverseCoordinatesAttr.get(mxObject).value) : false;  
+            if (props.colorAttr){
+                strokeColor = String(props.colorAttr.get(mxObject).value);
+            }
+            
+            props.opacityAttr ? strokeOpacity = Number(props.opacityAttr.get(mxObject).value) : 0; 
+            props.strokeWeightAttr ? strokeWeight = Number(props.strokeWeightAttr.get(mxObject).value) : 2;
+            // transform the coordinates string to a path object
+            path = createPathFromString(coordinatesString,reverse,false);
+            type = String(props.objectTypeAttr.get(mxObject).value);
+            let indexObj = -1;
+
+            if (type === 'Polygon'){
+                
+                let polygonObj = {
+                    guid : mxObject.id,
+                    isNew,
+                    name,
+                    mxObject,
+                    paths : path.paths, 
+                    visible : true,
+                    draggable,
+                    editable,
+                    strokeColor,
+                    strokeOpacity,
+                    strokeWeight,
+                    fillColor : strokeColor,
+                    fillOpacity : strokeOpacity      
+                } as PolygonProps;
+
+                let holePath;
+                if (props.holeCoordinatesStringAttr){
+                    holeCoordinatesString = String(props.holeCoordinatesStringAttr.get(mxObject).value);            
+                    if (holeCoordinatesString){
+                        // hole / inner bounds needs to be wound in opposite order of outer bounds
+                        holePath = createPathFromString(holeCoordinatesString,reverse,true);               
+                    }
+                }
+                if (holePath){
+                    polygonObj.holes = holePath.paths;
+                }
+                indexObj = -1;
+                props.polygons.filter(function(polygon,index){
+                    if (polygon.guid == polygonObj.guid){
+                        indexObj = index;
+                        return;
+                    }
+                });
+                // object exists -> remove old by index and add new
+                if (indexObj > -1) {
+                    props.polygons.splice(indexObj,1);  
+                }
+                props.polygons.push(polygonObj);
+                
+            } else if (type === 'Polyline'){
+                let lineType = "Normal";
+                if (props.lineTypeAttr){
+                    lineType = String(props.lineTypeAttr.get(mxObject).value);
+                }
+                let polylineObj = {
+                    guid : mxObject.id,
+                    isNew,
+                    name,
+                    mxObject,
+                    path : path.paths, 
+                    lineType,
+                    visible : true,
+                    draggable,
+                    editable,               
+                    strokeColor,
+                    strokeOpacity,
+                    strokeWeight
+                    
+                } as PolylineProps;
+
+                if (lineType === "Dotted" || lineType === "Dashed") {
+                    // set the stying options correctly for a dotted / dashed line
+                    setLineStyleOptions(lineType, polylineObj);
+                }
+                // reset index as it could have been updated from other object
+                indexObj = -1;
+                props.polylines.filter(function(polyline,index){
+                    if (polyline.guid == polylineObj.guid){
+                        indexObj = index;
+                        return;
+                    }
+                });
+                // object exists -> remove old by index and add new
+                if (indexObj > -1) {
+                    props.polylines.splice(indexObj,1);  
+                }
+                props.polylines.push(polylineObj);
+            }
+        })
+    }
+    return (
+        
+        <div style={{ height: containerStyle.height, width: containerStyle.width }} className={"googlemaps-polygon"}>
+            <APIProvider
+                // 5-5-2024 Added async part. See: https://github.com/JustFly1984/react-google-maps-api/issues/3334 
+                // 24-10-2024: Removed again since moved to new vis.gl/react-google-maps package
+                apiKey={props.apiKey /* + "&loading=async"*/}
+                libraries={[libraries]}
+            >
+                <CustomMap
+                    mapContainerStyle={containerStyle}
+                    defaultLat={defaultLat}
+                    defaultLng={defaultLng}
+                    lowestZoom={props.lowestZoom}
+                    coordinatesStringAttrUpdate={props.coordinatesStringAttrUpdate}
+                    polygons={props.polygons}
+                    polylines={props.polylines}
+                    int_onClick={props.int_onClick}
+                    int_disableInfoWindow={props.disableInfoWindow}
+                    infoWindowWidget={props.infoWindowWidget}
+                    overruleFitBoundsZoom={props.overruleFitBoundsZoom}
+                    defaultMapType={props.defaultMapType}
+                    opt_drag={props.opt_drag}
+                    opt_mapcontrol={props.opt_mapcontrol}
+                    opt_scroll={props.opt_scroll}
+                    opt_streetview={props.opt_streetview}
+                    opt_tilt={props.opt_tilt}
+                    opt_zoomcontrol={props.opt_zoomcontrol}
+                    styleArray={props.styleArray}
+                />
+            </APIProvider>
+        </div>      
+    ); 
 }
 

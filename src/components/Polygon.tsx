@@ -1,120 +1,154 @@
-import { Polygon } from "@react-google-maps/api";
-import React, { createElement } from "react";
-import { ObjectItem,EditableValue} from "mendix";
-import { addPolyEvent, PositionProps } from "./PathUtils";
+import {
+  forwardRef,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useCallback,
+  useMemo
+} from 'react';
+import { ObjectItem, EditableValue } from "mendix";
+import { GoogleMapsContext, useMapsLibrary } from '@vis.gl/react-google-maps';
+import type { Ref } from 'react';
+import { PositionProps } from './PathUtils';
+
+type PolygonEventProps = {
+  onClick?: (e: google.maps.MapMouseEvent) => void;
+  onDrag?: (e: google.maps.MapMouseEvent) => void;
+  onDragStart?: (e: google.maps.MapMouseEvent) => void;
+  onDragEnd?: (e: google.maps.MapMouseEvent) => void;
+  onMouseOver?: (e: google.maps.MapMouseEvent) => void;
+  onMouseOut?: (e: google.maps.MapMouseEvent) => void;
+  onPolygonChange?: (path: google.maps.MVCArray<google.maps.LatLng>) => void;
+};
 
 export interface PolyProps {
-    isNew:boolean;
-    paths:PositionProps[];   
-    center?: PositionProps;
-    guid: string;
-    mxObject: ObjectItem;
-    name: string;
-    draggable: boolean;
-    editable?: boolean;
-    visible: boolean;
-    onClick?:any;
-    coordinatesStringAttrUpdate?: EditableValue<string>;
+  coordinatesStringAttrUpdate?: EditableValue<string>;
+  isNew: boolean;
+  center?: PositionProps;
+  guid: string;
+  mxObject: ObjectItem;
+  name: string;
 }
 
-export interface PolygonProps extends PolyProps {
-    holes?:PositionProps[];
-    style: {
-        strokeColor : string;
-        strokeOpacity : number;
-        strokeWeight : number;
-        fillColor : string;
-        fillOpacity : number;
-    } 
+interface PolygonCustomProps extends PolyProps {
+  encodedPaths?: string[];
+  holes?: PositionProps[];
 }
 
-export interface PolygonState {
-    polygon: google.maps.Polygon;
-    center: google.maps.LatLng;
-}
+export type PolygonProps = google.maps.PolygonOptions &
+  PolygonEventProps &
+  PolygonCustomProps;
 
-export default class PolygonComponent extends React.Component<PolygonProps,PolygonState> {
-    logNode: string;
-    constructor(props: PolygonProps) {
-        super(props);
-        this.logNode = "Google Maps Polygon (React) widget: Polygon Component: ";
-        this.state = {
-            polygon: {} as google.maps.Polygon,
-            center: {} as google.maps.LatLng
-        };
+export type PolygonRef = Ref<google.maps.Polygon | null>;
+
+function usePolygon(props: PolygonProps) {
+  const {
+    onClick,
+    onDrag,
+    onDragStart,
+    onDragEnd,
+    onMouseOver,
+    onMouseOut,
+    onPolygonChange,
+    encodedPaths,
+    ...polygonOptions
+  } = props;
+
+  const callbacks = useRef({
+    onClick,
+    onDrag,
+    onDragStart,
+    onDragEnd,
+    onMouseOver,
+    onMouseOut,
+    onPolygonChange
+  });
+
+  const geometryLibrary = useMapsLibrary('geometry');
+  const logNode = "Google Maps Polygon (React) widget: Polygon: ";
+
+  const polygon = useRef(new google.maps.Polygon()).current;
+
+  const listenersRef = useRef<google.maps.MapsEventListener[]>([]);
+
+  // update PolygonOptions (note the dependencies aren't properly checked
+  // here, we just assume that setOptions is smart enough to not waste a
+  // lot of time updating values that didn't change)
+  useMemo(() => {
+    polygon.setOptions(polygonOptions);
+  }, [polygon, polygonOptions]);
+
+  const map = useContext(GoogleMapsContext)?.map;
+
+  useMemo(() => {
+    if (!encodedPaths || !geometryLibrary) return;
+    const paths = encodedPaths.map(path =>
+      geometryLibrary.encoding.decodePath(path)
+    );
+    polygon.setPaths(paths);
+  }, [polygon, encodedPaths, geometryLibrary]);
+
+  useEffect(() => {
+    if (!map) {
+      if (map === undefined)
+        console.error(logNode + '<Polygon> has to be inside a Map component.');
+      return;
     }
-  
-    onClick = (e:any) => {
-        if (e){
 
-        }
+    polygon.setMap(map);
+
+    return () => {
+      polygon.setMap(null);
     };
-    onInfoWindowLoad = () => {
-        console.log('infoWindow: ');
+  }, [map]);
+
+  const addEventListeners = useCallback(() => {
+    const gme = google.maps.event;
+    [
+      ['click', 'onClick'],
+      ['drag', 'onDrag'],
+      ['dragstart', 'onDragStart'],
+      ['dragend', 'onDragEnd'],
+      ['mouseover', 'onMouseOver'],
+      ['mouseout', 'onMouseOut']
+    ].forEach(([eventName, eventCallback]) => {
+      listenersRef.current.push(gme.addListener(polygon, eventName, (e: google.maps.MapMouseEvent) => {
+        const callback = callbacks.current[eventCallback as keyof typeof callbacks.current] as ((e: google.maps.MapMouseEvent) => void) | undefined;
+        if (callback) callback(e);
+      }))
+    });
+
+    if (props.editable && props.coordinatesStringAttrUpdate && onPolygonChange) {
+      polygon.getPaths().forEach((path) => {
+        listenersRef.current.push(gme.addListener(path, 'insert_at', () => { onPolygonChange(path) }))
+        listenersRef.current.push(gme.addListener(path, 'set_at', () => { onPolygonChange(path) }))
+        listenersRef.current.push(gme.addListener(path, 'remove_at', () => { onPolygonChange(path) }))
+      });
     }
-    onInfoWindowClose = () => {
+  }, [polygon]);
 
-    };  
-    onLoad = (polygon: google.maps.Polygon) => {  
+  useEffect(() => {
+    if (!polygon) return;
 
-        const polygonBounds = new google.maps.LatLngBounds();
-        const newPaths = polygon.getPath();
+    addEventListeners();
 
-        newPaths.forEach(function(element){polygonBounds.extend(element)})
+    return () => {
+      listenersRef.current.forEach(listener => listener.remove());
+    }	 
+    
+  }, [polygon, polygonOptions]);
 
-        // store center of polygon in polygon props
-        let center = polygonBounds.getCenter();
+  return polygon;
+}
 
-        this.setState({
-            polygon : polygon,
-            center: center
-        });
+/**
+ * Component to render a polygon on a map
+ */
+export const Polygon = forwardRef((props: PolygonProps, ref: PolygonRef) => {
+  const polygon = usePolygon(props);
 
-        // add a dynamic listener to the polygon or polygon click event for the NewEdit screen
-        if (this.props.editable && this.props.coordinatesStringAttrUpdate) {
-            addPolyEvent(newPaths,this.props.paths,this.props.coordinatesStringAttrUpdate);
-        }
+  useImperativeHandle(ref, () => polygon, []);
 
-    };
-    shouldComponentUpdate(nextProps:any) {
-        if (nextProps.name == this.props.name && nextProps.center == this.props.center && nextProps.paths == this.props.paths){
-            console.debug(this.logNode + 'polygon ' + this.props.name + ' NOT updated, since name, center and path havent changed!');
-            return false;
-        } else if (nextProps.name !== this.props.name){
-            console.debug(this.logNode + 'polygon ' + this.props.name + ' updated! New name: ' + nextProps.name);
-            return false;
-        } else if (nextProps.center != this.props.center){
-            console.debug(this.logNode + 'polygon ' + this.props.name + ' updated! New center: ' + nextProps.center);
-            return false;
-        } else if (nextProps.paths !== this.props.paths){
-            console.debug(this.logNode + 'polygon ' + this.props.name + ' updated! New path: ' + nextProps.paths);
-            return true;
-        } else {
-            return true;
-        }
-    }
-    render() {  
-      // if holes are added then add the holes array as well
-        let paths = [];
-        if (this.props.holes){
-            console.debug(this.logNode + 'polygon ' + this.props.name + ' has holes!')
-            paths = [this.props.paths,this.props.holes]
-        } else {
-            paths = [this.props.paths]
-        }
-
-        return (
-            <Polygon
-                onLoad={this.onLoad}
-                paths={paths}
-                options={this.props.style}
-                draggable={this.props.draggable}
-                editable={this.props.editable}
-                visible={this.props.visible}
-                onClick={this.props.onClick}
-            />
-        );
-    }
-  }
-
-
+  return null;
+});

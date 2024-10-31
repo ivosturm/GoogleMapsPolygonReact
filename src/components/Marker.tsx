@@ -1,5 +1,5 @@
 import React, { createElement } from "react";
-import { Marker } from "@react-google-maps/api";
+import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import { ObjectItem} from "mendix";
 
 
@@ -65,14 +65,14 @@ export default class MarkerComponent extends React.Component<MarkerProps,MarkerS
             return <div className="widget-google-maps-marker-url" style={style}></div>
         }
 
-        return (<Marker
-                    onLoad={this.onLoad}
+        return (<AdvancedMarker
+                    //onLoad={this.onLoad}
                     position={this.props.position}
                     onClick={this.props.onClick}
                     draggable={this.props.draggable}
                 >
                 <div className="widget-google-maps-marker"></div>
-            </Marker>
+            </AdvancedMarker>
         )
     }
 }

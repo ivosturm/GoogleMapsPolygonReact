@@ -1,6 +1,6 @@
-import { Component, ReactNode, createElement } from "react";
+import { Component, ReactNode, createElement, Fragment } from "react";
 
-import GoogleMapsContainer  from "./components/GoogleMapsContainer";
+import { GoogleMapsContainer }  from "./components/GoogleMapsContainer";
 
 import { GoogleMapsPolygonContainerProps } from "../typings/GoogleMapsPolygonProps";
 
@@ -8,7 +8,9 @@ import "./ui/GoogleMapsPolygon.css";
 
 export default class GoogleMapsPolygon extends Component<GoogleMapsPolygonContainerProps> {
     render(): ReactNode {
-        return <GoogleMapsContainer 
+        return <>
+        <div id="google-maps-polygon">
+            <GoogleMapsContainer 
             dataSource = {"XPath"}
             mapHeight={this.props.mapHeight}
             mapWidth={this.props.mapWidth}
@@ -45,6 +47,8 @@ export default class GoogleMapsPolygon extends Component<GoogleMapsPolygonContai
             locations={[]}
             polygons={[]}
             polylines={[]}
-            styleArray={this.props.styleArray}  />;
+            styleArray={this.props.styleArray}
+            />
+            </div></>
     }
 }

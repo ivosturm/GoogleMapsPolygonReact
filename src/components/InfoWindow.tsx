@@ -1,6 +1,5 @@
 import React, { Component, createElement } from "react";
-import { InfoWindow } from "@react-google-maps/api";
-
+import { InfoWindow } from "@vis.gl/react-google-maps"
 import { ObjectItem, ListWidgetValue} from "mendix";
 import { PositionProps } from "./PathUtils";
 
@@ -35,7 +34,7 @@ export default class InfoWindowComponent extends Component<InfoWindowProps> {
         return (  <InfoWindow
         position={this.props.position}
         onCloseClick={this.props.onCloseClick}
-        anchor={this.props.anchor}
+        // anchor={this.props.anchor}
     >
         <div>
             {innerWidget}

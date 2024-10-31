@@ -57,12 +57,12 @@ export function createPathFromString(coordinatesStringOriginal:string,reversedLa
     return pathObj;
 }
 // generic function to catch and process changes in shape of polygon / polyline
-export function onPolyObjectChange(path : any, oldcoordinates : string, type : string, attribute? : EditableValue<string>){
+export function onPolyObjectChange(path : any, oldcoordinates : string, attribute? : EditableValue<string>){
     // here do the snapping, after the polygon has been resized
     var newcoordinates = path.getArray();
-
+    console.debug(logNode + 'onPolyObjectChange: new coordinates: ' + newcoordinates.toString());
     if (newcoordinates.toString() != oldcoordinates) {
-        console.debug(logNode + 'coordinates changed via ' + type + ' event..');
+        console.debug(logNode + 'coordinates changed');
         if (attribute){
             console.debug(logNode + 'trying to change attribute. First checking editability..');
             if (isAttributeEditable("coordinatesStringAttrUpdate",attribute)){
@@ -73,31 +73,27 @@ export function onPolyObjectChange(path : any, oldcoordinates : string, type : s
     }
 } 
 
-export function  addPolyEvent(paths : google.maps.MVCArray<google.maps.LatLng>,oldPaths:PositionProps[],attribute? : EditableValue<string>){
-    google.maps.event.addListener(paths, 'set_at', () => {     
-                    
-        onPolyObjectChange(paths,oldPaths.join(),"set_at" ,attribute);
-    });
-
-    google.maps.event.addListener(paths, 'insert_at', () => {
-        onPolyObjectChange(paths,oldPaths.join(),"insert_at", attribute);
-    });
-}
-
 export function setCenterPolyobject(polyObject:any,mapBounds:google.maps.LatLngBounds,type:string,name:string) {
-
-    if (polyObject && !polyObject.isNew && polyObject.paths){ 
+    // polygon has paths, polyline has path
+    let paths;
+    if (polyObject && polyObject.paths) {
+        paths = polyObject.paths;
+    } else if (polyObject && polyObject.path) {
+        paths = polyObject.path;
+    }
+    if (polyObject && !polyObject.isNew && paths && paths.length > 0 && !isNaN(paths[0].lat) && !isNaN(paths[0].lng)) { 
         let objBounds = new google.maps.LatLngBounds();
-        for (var j = 0; j < polyObject.paths.length; j++) {
- 
+        for (var j = 0; j < paths.length; j++) {
+
             //console.info(this.state.polygons[i].paths[j]);
-            const ObjElementBound = polyObject.paths[j];
+            const ObjElementBound = paths[j];
             // add bound to current polygon bound for determining center for infowindow
             objBounds.extend(ObjElementBound);
 
             // add bound to map bound for properly zooming to full extent of all polygons
             mapBounds.extend(ObjElementBound);
         }
+
         // store center of polygon in poly props
         const centerLatLng = objBounds.getCenter();
         polyObject.center = {
@@ -106,7 +102,7 @@ export function setCenterPolyobject(polyObject:any,mapBounds:google.maps.LatLngB
         }
         //console.warn("polyobject center set to lat / lng: " + centerLatLng.lat() + ' / ' + centerLatLng.lng());
         
-    } else if (polyObject && polyObject.paths && (isNaN(polyObject.paths[0].lat) || isNaN(polyObject.paths[0].lng))){
+    } else if (polyObject && paths && (isNaN(paths[0].lat) || isNaN(paths[0].lng))){
         console.debug(logNode + type + ' ' + name + " has incorrect latitude / longitude. This can happen when " + type + " still needs to be drawn.")
     }
     return mapBounds;
@@ -123,14 +119,14 @@ export function updateCoordinatesAttribute(coordinates : string, coordinatesStri
 
 export function setLineStyleOptions(lineType : string, polyLineObj : PolylineProps ) {
     let lineSymbol = {} as IconProps;
-    polyLineObj.style.icons = [] as IconsProps[];
+    polyLineObj.icons = [] as IconsProps[];
     if (lineType === "Dotted") {
 
         lineSymbol = {
             path: 0, //google not loaded yet, but should be: google.maps.SymbolPath.CIRCLE,
             fillOpacity: 1,
             scale: 3,
-            strokeWeight: polyLineObj.style.strokeWeight
+            strokeWeight: polyLineObj.strokeWeight ?? 1
         };
     } else if (lineType === "Dashed") {
 
@@ -138,16 +134,16 @@ export function setLineStyleOptions(lineType : string, polyLineObj : PolylinePro
             path: 'M 0,-1 0,1',
             strokeOpacity: 1,
             scale: 4,
-            strokeWeight: polyLineObj.style.strokeWeight
+            strokeWeight: polyLineObj.strokeWeight ?? 1
         };
     }
-    polyLineObj.style.strokeOpacity = 0;
+    polyLineObj.strokeOpacity = 0;
     const icons = [{
         icon: lineSymbol,
         offset: '0',
         repeat: '20px'
     }];
-    polyLineObj.style.icons = icons;
+    polyLineObj.icons = icons;
 
     return polyLineObj;
 }

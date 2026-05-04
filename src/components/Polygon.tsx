@@ -33,7 +33,6 @@ export interface PolyProps {
 
 interface PolygonCustomProps extends PolyProps {
   encodedPaths?: string[];
-  holes?: PositionProps[];
 }
 
 export type PolygonProps = google.maps.PolygonOptions &

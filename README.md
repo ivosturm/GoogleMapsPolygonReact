@@ -1,22 +1,28 @@
 ## GoogleMapsPolygon
 Displaying and editing Polygons and Polylines within your Mendix application.
 
-This widget is a rewrite of the original GoogleMapsPolygon widget, originally based on the Dojo framework, see https://marketplace.mendix.com/link/component/105491.
+Additional features:
 
-This widget uses React / TypeScript and the new pluggable widgets API. Additional features:
-
-Support for all datasources, even nanoflows;
+Support for all datasources;
 Support for all types of on click behavior when clicking on a Polygon / Polyline overlay;
 Editability based on Mendix Studio Pro, respecting entity access rights;
-One hole per polygon is supported;
 
 ## Features
-* plotting of Polygons and Polylines;
-* drawing, editing and dragging of Polygons and Polylines
-* styling options, both for map as well as appearance of Polygons / Polylines;
-* dynamic default location when creating a new Polygon/Polyline
-* on click infowindow and triggering of action (microflow/nanoflow/show page etc);
-* optionally disable the infowindow and directly trigger the action
+
+DRAWING
+* Drawing, editing and dragging of polygons and polylines
+* Multiple holes per polygon supported. Can't be edited directly within Polygon
+* Area calculation (in hectares) for polygons
+* Undo Redo for drawing
+* Validation of format both for polygons as well as holes per polygon
+
+CUSTOMIZATION
+* Styling of polygons and polylines can be fully customized; color, stroke weight, opacity etc
+* Infowindow popup can be configured as a Mendix dataview hence fully styled to users liking
+
+INTERACTION
+* Possibility for static as well as dynamic default location
+* Recenter button
 * flipping of coordinates (when drawing, google maps generates the lat / lng pairs in reverse order as can be for instance abstracted from GeoJSON format);
 
 ## Usage
@@ -32,13 +38,12 @@ One hole per polygon is supported;
 2. Coordinates attribute: required format : ((lat1,long1),(lat2,long2),(lat3,long3),(..)) or [[lat1,long1],[lat2,long2],[lat3,long3],[..]]
 3. Color attribute: any simple color (red, green, blue) or hexadecimal (with the #) will suffice;
 4. Type attribute: Enum containing values Polygon and Polyline.
-5. Infowindow attribute: the string attribute containing the to be displayed name in the infowindow popup
 
 ## Demo project
 https://googlemapspolygona-sandbox.mxapps.io
 
 ## Issues, suggestions and feature requests
-None
+If you are in single object edit mode (so drawing enabled) and you would like changes to for instance color, opacity and stroke weight, to be directly reflecting in the drawn polygon/polyline, an infowindow dataview NEEDS to be placed inside the widget. This will make sure Mendix pushes direct updates to the map.
 
 ## Development and contribution
-Thanks to the team behind the React Google Maps vis-gl library.
+Thanks to the team behind the React Google Maps vis-gl and Terra Draw libraries.

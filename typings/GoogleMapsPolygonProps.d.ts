@@ -16,9 +16,10 @@ export interface GoogleMapsPolygonContainerProps {
     class: string;
     style?: CSSProperties;
     tabIndex?: number;
+    apiKeyObjectDS: ListValue;
+    apiKeyAttribute: ListAttributeValue<string>;
     mapHeight: number;
     mapWidth: number;
-    apiAccessKey: string;
     defaultMapType: DefaultMapTypeEnum;
     defaultLat: string;
     defaultLng: string;
@@ -30,9 +31,10 @@ export interface GoogleMapsPolygonContainerProps {
     overruleFitBoundsZoom: boolean;
     lowestZoom: number;
     polyObjects: ListValue;
-    holeCoordinatesStringArray: ListAttributeValue<string>;
+    holeCoordinatesStringArray?: ListAttributeValue<string>;
     coordinatesStringAttr: ListAttributeValue<string>;
     coordinatesStringAttrUpdate?: EditableValue<string>;
+    areaAttrUpdate?: EditableValue<Big>;
     reverseCoordinatesAttr?: ListAttributeValue<boolean>;
     colorAttr: ListAttributeValue<string>;
     strokeWeightAttr?: ListAttributeValue<Big>;
@@ -47,6 +49,9 @@ export interface GoogleMapsPolygonContainerProps {
     opt_scroll: boolean;
     opt_streetview: boolean;
     opt_zoomcontrol: boolean;
+    opt_fullscreencontrol: boolean;
+    opt_recenterbutton: boolean;
+    opt_undobutton: boolean;
     opt_tilt: Opt_tiltEnum;
     styleArray: string;
 }
@@ -60,9 +65,10 @@ export interface GoogleMapsPolygonPreviewProps {
     style: string;
     styleObject?: CSSProperties;
     readOnly: boolean;
+    apiKeyObjectDS: {} | { caption: string } | { type: string } | null;
+    apiKeyAttribute: string;
     mapHeight: number | null;
     mapWidth: number | null;
-    apiAccessKey: string;
     defaultMapType: DefaultMapTypeEnum;
     defaultLat: string;
     defaultLng: string;
@@ -77,6 +83,7 @@ export interface GoogleMapsPolygonPreviewProps {
     holeCoordinatesStringArray: string;
     coordinatesStringAttr: string;
     coordinatesStringAttrUpdate: string;
+    areaAttrUpdate: string;
     reverseCoordinatesAttr: string;
     colorAttr: string;
     strokeWeightAttr: string;
@@ -91,6 +98,9 @@ export interface GoogleMapsPolygonPreviewProps {
     opt_scroll: boolean;
     opt_streetview: boolean;
     opt_zoomcontrol: boolean;
+    opt_fullscreencontrol: boolean;
+    opt_recenterbutton: boolean;
+    opt_undobutton: boolean;
     opt_tilt: Opt_tiltEnum;
     styleArray: string;
 }

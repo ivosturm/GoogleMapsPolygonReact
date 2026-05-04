@@ -4,7 +4,7 @@
     "baseUrl": ".",
     "rootDir": "./",
     "jsxFragmentFactory": "Fragment",
-	"types": ["react", "jest" ],
+	"types": ["react", "jest",  "google.maps"],
 	"strictPropertyInitialization": false,
     "target": "es5",
     "lib": [ "es2016", "dom" ],

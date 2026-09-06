@@ -104,8 +104,12 @@ function usePolygon(props: PolygonProps) {
 
   const addEventListeners = useCallback(() => {
     const gme = google.maps.event;
+    if (onClick) {
+      listenersRef.current.push(gme.addListener(polygon, 'click', (e: google.maps.MapMouseEvent) => {
+        onClick(e);
+      }));
+    }
     [
-      ['click', 'onClick'],
       ['drag', 'onDrag'],
       ['dragstart', 'onDragStart'],
       ['dragend', 'onDragEnd'],

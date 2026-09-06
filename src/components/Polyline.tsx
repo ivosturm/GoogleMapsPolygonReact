@@ -106,8 +106,12 @@ function usePolyline(props: PolylineProps) {
 
   const addEventListeners = useCallback(() => {
     const gme = google.maps.event;
+    if (onClick) {
+      listenersRef.current.push(gme.addListener(polyline, 'click', (e: google.maps.MapMouseEvent) => {
+        onClick(e);
+      }));
+    }
     [
-      ['click', 'onClick'],
       ['drag', 'onDrag'],
       ['dragstart', 'onDragStart'],
       ['dragend', 'onDragEnd'],

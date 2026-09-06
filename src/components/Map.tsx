@@ -487,7 +487,18 @@ const CustomMap: React.FC<GoogleMapsPropsExtended> = (props) => {
         // Your logic for handling InfoWindow close
         setState(prevState => ({ ...prevState, showingInfoWindow: false }));
     };
+    const isShapeNonInteractive = (mxObject: ObjectItem) =>
+        props.int_disableInfoWindow && !props.int_onClick?.get(mxObject).canExecute;
     const mvcObjectClickHandler = (event: any, name: string, center?: PositionProps, mxObject?: ObjectItem) => {
+        if (props.int_onClick && mxObject) {
+            props.int_onClick.get(mxObject).execute();
+        }
+
+        if (props.int_disableInfoWindow) {
+            setState(prevState => ({ ...prevState, showingInfoWindow: false }));
+            return;
+        }
+
         // if optional center wasn't passed, use the event's latLng
         if (!center) {
             center = { lat: event.latLng.lat(), lng: event.latLng.lng() };
@@ -594,7 +605,8 @@ const CustomMap: React.FC<GoogleMapsPropsExtended> = (props) => {
                                     }}
                                     name={polygon.name}
                                     center={polygon.center}
-                                    onClick={(event: any) => mvcObjectClickHandler(event, polygon.name, polygon.center, polygon.mxObject)}
+                                    clickable={!isShapeNonInteractive(polygon.mxObject)}
+                                    onClick={isShapeNonInteractive(polygon.mxObject) ? undefined : (event: any) => mvcObjectClickHandler(event, polygon.name, polygon.center, polygon.mxObject)}
                                     onDragStart={() => handleShapeDragStart("polygon", polygon.guid)}
                                     onDragEnd={() => handleShapeDragEnd("polygon", polygon.guid, true)}
                                     onPolygonChange={(path: google.maps.MVCArray<google.maps.LatLng>) => {
@@ -635,7 +647,8 @@ const CustomMap: React.FC<GoogleMapsPropsExtended> = (props) => {
                                     name={polyline.name}
                                     icons={polyline.icons}
                                     center={polyline.center}
-                                    onClick={(event:any) => mvcObjectClickHandler(event, polyline.name, event.latLng, polyline.mxObject)}
+                                    clickable={!isShapeNonInteractive(polyline.mxObject)}
+                                    onClick={isShapeNonInteractive(polyline.mxObject) ? undefined : (event: any) => mvcObjectClickHandler(event, polyline.name, event.latLng, polyline.mxObject)}
                                     onDragStart={() => handleShapeDragStart("polyline", polyline.guid)}
                                     onDragEnd={() => handleShapeDragEnd("polyline", polyline.guid, false)}
                                     onPolylineChange={(path: google.maps.MVCArray<google.maps.LatLng>) => {
